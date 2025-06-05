@@ -87,7 +87,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch, nextTick } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { useNotesStore } from "./stores/notes";
 
 const showEditor = computed(() => {
@@ -562,37 +562,10 @@ const handlePaste = async (event) => {
     isLoading.value = true;
     try {
       if (window.uploadImage) {
-        const uploadResult = await window.uploadImage(imageFile);
-        if (uploadResult && uploadResult.url) {
-          // 记录图片的URL和key
-          noteImages.value.set(uploadResult.url, uploadResult.key);
-
-          // 确保 editor.value 存在
-          if (editor.value) {
-            editor.value.focus(); // 聚焦编辑器
-            // 插入图片
-            document.execCommand(
-              "insertHTML",
-              false,
-              `<img src="${uploadResult.url}" style="max-width: 100%; display: block;" alt="pasted image" data-key="${uploadResult.key}" />`
-            );
-            updateContent();
-            await handleSave();
-          } else {
-            console.error("编辑器引用未定义，无法插入图片。");
-            alert("编辑器未准备好，无法插入图片。");
-          }
-        } else {
-          console.error("图片上传成功，但未返回有效的 URL。", uploadResult);
-          alert("图片上传成功，但获取图片地址失败。");
-        }
-      } else {
-        console.error("uploadImage 函数未定义。");
-        alert("图片上传功能不可用。");
+        
       }
     } catch (error) {
       console.error("粘贴图片并上传时出错:", error);
-      alert(`图片上传失败: ${error.message}`);
     } finally {
       isLoading.value = false;
     }
@@ -848,10 +821,8 @@ const handleEditorBlur = async () => {
   }
 };
 
-// 处理拖拽图片相关的函数
 const handleDragOver = (event) => {
   event.preventDefault();
-  // 添加一些视觉反馈，例如改变编辑器的边框颜色
   if (editor.value) {
     editor.value.classList.add('drag-over');
   }
@@ -859,7 +830,6 @@ const handleDragOver = (event) => {
 
 const handleDragLeave = (event) => {
   event.preventDefault();
-  // 移除视觉反馈
   if (editor.value) {
     editor.value.classList.remove('drag-over');
   }
@@ -867,7 +837,6 @@ const handleDragLeave = (event) => {
 
 const handleDrop = async (event) => {
   event.preventDefault();
-  // 移除视觉反馈
   if (editor.value) {
     editor.value.classList.remove('drag-over');
   }
@@ -887,37 +856,13 @@ const handleDrop = async (event) => {
     isLoading.value = true;
     try {
       if (window.uploadImage) {
-        const uploadResult = await window.uploadImage(imageFile);
-        if (uploadResult && uploadResult.url) {
-          // 记录图片的URL和key
-          noteImages.value.set(uploadResult.url, uploadResult.key);
-
-          // 确保 editor.value 存在
-          if (editor.value) {
-            editor.value.focus(); // 聚焦编辑器
-            // 插入图片
-            document.execCommand(
-              "insertHTML",
-              false,
-              `<img src="${uploadResult.url}" style="max-width: 100%; display: block;" alt="dropped image" data-key="${uploadResult.key}" />`
-            );
-            updateContent();
-            await handleSave();
-          } else {
-            console.error("编辑器引用未定义，无法插入图片。");
-            alert("编辑器未准备好，无法插入图片。");
-          }
-        } else {
-          console.error("图片上传成功，但未返回有效的 URL。", uploadResult);
-          alert("图片上传成功，但获取图片地址失败。");
-        }
+        
+        
       } else {
-        console.error("uploadImage 函数未定义。");
-        alert("图片上传功能不可用。");
+
       }
     } catch (error) {
-      console.error("拖拽图片并上传时出错:", error);
-      alert(`图片上传失败: ${error.message}`);
+      console.error("拖拽图片时出错:", error);
     } finally {
       isLoading.value = false;
     }
