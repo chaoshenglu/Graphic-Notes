@@ -133,64 +133,6 @@ function backToHome() {
   .main-content {
     padding: 1rem;
   }
-  
-  .welcome-title {
-    font-size: 2rem;
-  }
-  
-  .welcome-section {
-    margin-bottom: 2rem;
-  }
-  
-  .tools-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1.5rem;
-    max-width: none;
-  }
-  
-  .tool-card {
-    padding: 1.5rem;
-  }
-  
-  .tool-icon {
-    font-size: 2.5rem;
-  }
-  
-  .tool-name {
-    font-size: 1.125rem;
-  }
-  
-  .placeholder-content {
-    padding: 2rem;
-  }
-  
-  .notes-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-  
-  .note-card {
-    padding: 1rem;
-  }
-  
-  .list-header {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .new-note-btn {
-    width: 100%;
-    justify-content: center;
-  }
-  
-  .pagination {
-    gap: 0.25rem;
-  }
-  
-  .page-btn {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.8125rem;
-  }
 }
 
 @media (max-width: 480px) {
@@ -206,29 +148,5 @@ function backToHome() {
     font-size: 1.25rem;
   }
   
-  .welcome-title {
-    font-size: 1.75rem;
-  }
-  
-  .tools-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-  
-  .tool-card {
-    padding: 1.25rem;
-  }
-  
-  .tool-icon {
-    font-size: 2rem;
-  }
-  
-  .placeholder-content {
-    padding: 1.5rem;
-  }
-  
-  .placeholder-icon {
-    font-size: 3rem;
-  }
 }
 </style>
