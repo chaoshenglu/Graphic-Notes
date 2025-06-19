@@ -17,10 +17,6 @@
     <main class="main-content">
       <!-- 首页九宫格 -->
       <div v-if="currentView === 'home'" class="home-container">
-        <!-- <div class="welcome-section">
-          <h2 class="welcome-title">欢迎使用 ResistKit</h2>
-          <p class="welcome-subtitle">您的多功能工具集</p>
-        </div> -->
         
         <div class="tools-grid">
           <div 
