@@ -1,0 +1,52 @@
+@url = https://api.tiffanylamps.com.cn
+@json = Content-Type: application/json
+
+### 创建笔记 (user_id: 1, url: http://example.com/note1)
+# @name createNote1
+POST {{url}}/notes
+{{json}}
+
+{
+  "user_id": 1,
+  "title": "我的第一篇笔记",
+  "content": "这是笔记的内容，关于某个特定的URL。",
+  "domain": "example.com",
+  "url": "http://example.com/note1",
+  "is_public": false
+}
+
+### 创建另一篇笔记（若url重复，则会失败，因为每个URL最多只能创建一篇笔记）
+# @name createNote2
+POST {{url}}/notes
+{{json}}
+
+{
+  "user_id": 1,
+  "title": "我的第二篇笔记",
+  "content": "笔记内容。",
+  "domain": "example.com",
+  "url": "http://example.com/note1",
+  "is_public": true
+}
+
+### 根据URL和用户ID查询笔记 (user_id: 1, url: http://example.com/note1)
+GET {{url}}/notes/url?url=http%3A%2F%2Fexample.com%2Fnote1&user_id=1
+
+### 查询用户1的全部笔记 (第一页，每页5条)
+GET {{url}}/notes/user/1?page=1&pageSize=5
+
+### 修改笔记
+# PUT {{url}}/notes/{{note1_id}}
+PUT {{url}}/notes/432712c0-56d3-4f5f-8860-498d6b78bf9b
+{{json}}
+
+{
+  "user_id": 1,
+  "title": "更新后的第一篇笔记标题",
+  "content": "更新后的笔记内容。",
+  "is_public": true
+}
+
+### 删除笔记
+# DELETE {{url}}/notes/{{note1_id}}?user_id=1
+DELETE {{url}}/notes/432712c0-56d3-4f5f-8860-498d6b78bf9b?user_id=1
