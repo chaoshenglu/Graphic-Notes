@@ -42,10 +42,10 @@ const tools = ref([
     description: '高效图片压缩'
   },
   {
-    id: 'drawing-tool',
-    name: '画图工具',
-    icon: '✏️',
-    description: '在线绘图工具'
+    id: 'detail-generate',
+    name: '生成详情页',
+    icon: '📃',
+    description: '产品详情页生成'
   },
   {
     id: 'image-convert',

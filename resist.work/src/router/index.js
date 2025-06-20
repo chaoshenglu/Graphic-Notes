@@ -3,7 +3,7 @@ import Home from '../views/Home.vue'
 import Notes from '../views/Notes.vue'
 import AiDrawing from '../views/AiDrawing.vue'
 import ImageCompress from '../views/ImageCompress.vue'
-import DrawingTool from '../views/DrawingTool.vue'
+import DrawingTool from '../views/DetailGenerate.vue'
 import ImageConvert from '../views/ImageConvert.vue'
 import GridCut from '../views/GridCut.vue'
 import Watermark from '../views/Watermark.vue'
@@ -32,7 +32,7 @@ const routes = [
     component: ImageCompress
   },
   {
-    path: '/drawing-tool',
+    path: '/detail-generate',
     name: 'DrawingTool',
     component: DrawingTool
   },
