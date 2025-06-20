@@ -42,16 +42,25 @@
         </div>
         
         <!-- 代码展示区域 -->
-        <div v-if="showCodeArea" class="code-section">
-          <label for="code-area">生成的代码:</label>
-          <textarea 
-            id="code-area"
-            v-model="generatedCode" 
-            class="code-textarea"
-            placeholder="生成的代码将在这里显示..."
-            rows="10"
-          ></textarea>
-        </div>
+         <div v-if="showCodeArea" class="code-section">
+           <div class="code-header">
+             <label for="code-area">生成的代码:</label>
+             <button 
+               @click="copyToClipboard" 
+               class="btn btn-secondary btn-sm"
+               title="复制代码到剪贴板"
+             >
+               复制代码
+             </button>
+           </div>
+           <textarea 
+             id="code-area"
+             v-model="generatedCode" 
+             class="code-textarea"
+             placeholder="生成的代码将在这里显示..."
+             rows="10"
+           ></textarea>
+         </div>
       </div>
     </div>
   </div>
@@ -71,33 +80,44 @@ const generatedCode = ref('')
 // 是否显示代码区域
 const showCodeArea = ref(false)
 
-// 生成随机字符串
-const generateRandomCode = () => {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789{}[]();,.<>/?"\':|-=+_*&^%$#@!~`'
-  const codeTemplates = [
-    'function generateImage(id, count) {\n  const images = [];\n  for(let i = 0; i < count; i++) {\n    images.push(`image_${id}_${i}.jpg`);\n  }\n  return images;\n}',
-    'const config = {\n  id: "{{ID}}",\n  count: {{COUNT}},\n  format: "jpg",\n  quality: 0.8\n};\n\nconst result = processImages(config);',
-    'import { createImage } from "./utils";\n\nclass ImageGenerator {\n  constructor(id, count) {\n    this.id = id;\n    this.count = count;\n  }\n  \n  generate() {\n    return Array.from({length: this.count}, (_, i) => \n      createImage(this.id + "_" + i)\n    );\n  }\n}'
-  ]
+// 生成HTML代码
+const generateHtmlCode = () => {
+  const { id, count } = formData
   
-  // 随机选择一个模板
-  let template = codeTemplates[Math.floor(Math.random() * codeTemplates.length)]
+  // 生成图片链接数组
+  const imageUrls = []
+  for (let i = 1; i <= count; i++) {
+    imageUrls.push(`https://tiffanylamps.art/${id}/detail/image-${i}.webp`)
+  }
   
-  // 替换模板中的占位符
-  template = template.replace(/{{ID}}/g, formData.id)
-  template = template.replace(/{{COUNT}}/g, formData.count)
+  // 生成img标签
+  const imgTags = imageUrls.map(url => `  <img src="${url}">`).join('\n')
   
-  // 添加一些随机字符
-  const randomSuffix = Array.from({length: 20}, () => 
-    chars.charAt(Math.floor(Math.random() * chars.length))
-  ).join('')
-  
-  return template + '\n\n// Random: ' + randomSuffix
+  // 生成完整的HTML代码
+  return `<div style="display: flex;flex-direction: column;">\n${imgTags}\n</div>`
+}
+
+// 复制到剪贴板
+const copyToClipboard = async () => {
+  try {
+    await navigator.clipboard.writeText(generatedCode.value)
+    // 这里可以添加成功提示
+    alert('代码已复制到剪贴板！')
+  } catch (err) {
+    console.error('复制失败:', err)
+    // 降级方案：使用传统方法
+    const textArea = document.createElement('textarea')
+    textArea.value = generatedCode.value
+    document.body.appendChild(textArea)
+    textArea.select()
+    document.execCommand('copy')
+    document.body.removeChild(textArea)
+  }
 }
 
 // 生成源代码
 const generateCode = () => {
-  generatedCode.value = generateRandomCode()
+  generatedCode.value = generateHtmlCode()
   showCodeArea.value = true
 }
 </script>
@@ -206,16 +226,27 @@ const generateCode = () => {
 }
 
 .code-section {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.code-section label {
-  font-weight: 500;
-  color: var(--text-primary);
-  font-size: 0.875rem;
-}
+   display: flex;
+   flex-direction: column;
+   gap: 0.5rem;
+ }
+ 
+ .code-header {
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+ }
+ 
+ .code-header label {
+   font-weight: 500;
+   color: var(--text-primary);
+   font-size: 0.875rem;
+ }
+ 
+ .btn-sm {
+   padding: 0.5rem 1rem;
+   font-size: 0.8125rem;
+ }
 
 .code-textarea {
   width: 100%;
