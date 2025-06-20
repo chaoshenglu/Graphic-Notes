@@ -2,7 +2,7 @@
   <div class="detail-generate">
     <div class="card">
       <div class="card-header">
-        <h2>生成产品详情页</h2>
+        <h2>📃 生成产品详情页</h2>
       </div>
       <div class="card-body">
         <!-- 输入框区域 -->
