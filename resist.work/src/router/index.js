@@ -3,7 +3,7 @@ import Home from '../views/Home.vue'
 import Notes from '../views/Notes.vue'
 import AiDrawing from '../views/AiDrawing.vue'
 import ImageCompress from '../views/ImageCompress.vue'
-import DrawingTool from '../views/DetailGenerate.vue'
+import DetailGenerate from '../views/DetailGenerate.vue'
 import ImageConvert from '../views/ImageConvert.vue'
 import GridCut from '../views/GridCut.vue'
 import Watermark from '../views/Watermark.vue'
@@ -33,8 +33,8 @@ const routes = [
   },
   {
     path: '/detail-generate',
-    name: 'DrawingTool',
-    component: DrawingTool
+    name: 'DetailGenerate',
+    component: DetailGenerate
   },
   {
     path: '/image-convert',
