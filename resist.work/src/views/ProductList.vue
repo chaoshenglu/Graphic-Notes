@@ -79,7 +79,7 @@ const total = ref(0)
 const fetchProductList = async () => {
   loading.value = true
   try {
-    const response = await axios.get('https://api.tiffanylamps.com.cn/products', {
+    const response = await axios.get(`${window.lx_host}/products`, {
       params: {
         page: currentPage.value,
         limit: pageSize.value

@@ -3,7 +3,7 @@
     <!-- 应用头部 -->
     <header class="app-header">
       <div class="header-content">
-        <div style="display: flex;flex-direction: row;">
+        <div style="display: flex;flex-direction: row;cursor: pointer;" @click="refreshAndGoHome">
           <img src="/src/assets/logo.svg" style="width: 34px;margin-right: 10px;">
           <h1 class="app-title">琪响智能</h1>
         </div>
@@ -24,6 +24,13 @@
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
+
+function refreshAndGoHome() {
+  // 导航到首页
+  router.push('/')
+  // 刷新整个网页
+  window.location.reload()
+}
 
 // 返回首页
 function backToHome() {

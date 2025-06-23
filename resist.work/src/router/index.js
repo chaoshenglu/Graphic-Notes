@@ -6,6 +6,7 @@ import ImageCompress from '../views/ImageCompress.vue'
 import DetailGenerate from '../views/DetailGenerate.vue'
 import ImageConvert from '../views/ImageConvert.vue'
 import ProductList from '../views/ProductList.vue'
+import ProductDetail from '../views/ProductDetail.vue'
 import Watermark from '../views/Watermark.vue'
 import QrDecode from '../views/QrDecode.vue'
 import Base64Image from '../views/Base64Image.vue'
@@ -45,6 +46,11 @@ const routes = [
     path: '/product-list',
     name: 'ProductList',
     component: ProductList
+  },
+  {
+    path: '/product-detail',
+    name: 'ProductDetail',
+    component: ProductDetail
   },
   {
     path: '/watermark',

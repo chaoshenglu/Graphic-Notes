@@ -12,3 +12,5 @@ app.use(ElementPlus, {
   locale: zhCn,
 })
 app.mount('#app')
+window.lx_host = window.localStorage.getItem("lx_host")
+console.log("window.lx_host",window.lx_host)
