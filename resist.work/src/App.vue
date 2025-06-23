@@ -26,10 +26,10 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 
 function refreshAndGoHome() {
-  // 导航到首页
-  router.push('/')
-  // 刷新整个网页
-  window.location.reload()
+  // 导航到首页并强制刷新路由
+  router.push({ path: '/', replace: true })
+  // 使用nextTick确保路由更新后再刷新页面状态
+  router.go(0)
 }
 
 // 返回首页
