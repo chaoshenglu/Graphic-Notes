@@ -26,10 +26,16 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 
 function refreshAndGoHome() {
-  // 导航到首页并强制刷新路由
-  router.push({ path: '/', replace: true })
-  // 使用nextTick确保路由更新后再刷新页面状态
-  router.go(0)
+  // 如果当前已经在首页，强制刷新路由
+  if (router.currentRoute.value.path === '/') {
+    // 先跳转到其他路由再回到首页，实现刷新效果
+    router.replace('/notes').then(() => {
+      router.replace('/')
+    })
+  } else {
+    // 如果不在首页，直接导航到首页
+    router.replace('/')
+  }
 }
 
 // 返回首页
