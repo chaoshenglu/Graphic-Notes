@@ -65,8 +65,11 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import axios from 'axios'
 import { ElMessage, ElMessageBox } from 'element-plus'
+
+const router = useRouter()
 
 // 响应式数据
 const productList = ref([])
@@ -126,10 +129,20 @@ const formatDate = (dateString) => {
   })
 }
 
-// 查看详情（功能留空）
+// 查看详情
 const viewDetail = (row) => {
-  ElMessage.info(`查看产品详情: ${row.title_cn}`)
-  // TODO: 实现查看详情功能
+  if (!row.product_id) {
+    ElMessage.error('产品ID不存在，无法查看详情')
+    return
+  }
+  
+  // 跳转到产品详情页面
+  router.push({
+    name: 'ProductDetail',
+    params: {
+      id: row.product_id
+    }
+  })
 }
 
 // 删除产品（功能留空）

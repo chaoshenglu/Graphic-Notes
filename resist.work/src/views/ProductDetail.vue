@@ -2,7 +2,27 @@
   <div class="product-detail">
     <div class="product-titles">
       <h1 class="title-cn">{{ productData?.title_cn || 'No Chinese Title' }}</h1>
-      <h2 class="title-en">{{ productData?.title_en || 'No English Title' }}</h2>
+      <div class="title-en-container">
+        <h2 class="title-en">{{ productData?.title_en || 'No English Title' }}</h2>
+        <div class="title-actions">
+          <el-button 
+            type="primary" 
+            :icon="Edit" 
+            size="small" 
+            circle 
+            @click="editTitleEn"
+            title="编辑英文标题"
+          />
+          <el-button 
+            type="success" 
+            :icon="CopyDocument" 
+            size="small" 
+            circle 
+            @click="copyTitleEn"
+            title="复制英文标题"
+          />
+        </div>
+      </div>
     </div>
     <div class="product-ids">
       <div class="id-item">
@@ -11,7 +31,27 @@
       </div>
       <div class="id-item">
         <span class="id-label">Shopify ID:</span>
-        <span class="id-value">{{ productData?.shopify_id || 'N/A' }}</span>
+        <div class="id-value-container">
+          <span class="id-value">{{ productData?.shopify_id || 'N/A' }}</span>
+          <div class="id-actions">
+            <el-button 
+              type="primary" 
+              :icon="Edit" 
+              size="small" 
+              circle 
+              @click="editShopifyId"
+              title="编辑Shopify ID"
+            />
+            <el-button 
+              type="success" 
+              :icon="CopyDocument" 
+              size="small" 
+              circle 
+              @click="copyShopifyId"
+              title="复制Shopify ID"
+            />
+          </div>
+        </div>
       </div>
     </div>
     <div class="main-images-section">
@@ -36,6 +76,7 @@
           v-for="(sku, index) in productData?.sku_data || []" 
           :key="index" 
           class="sku-item"
+          @click="openSkuEditModal(sku, index)"
         >
           <div class="sku-image">
             <img :src="sku.skuImageUrl" :alt="sku.skuNameCn" />
@@ -45,6 +86,10 @@
             <div class="sku-name-en">{{ sku.skuNameEn || 'No English Name' }}</div>
             <div class="sku-price">{{ sku.price ? `¥${sku.price}` : '价格待定' }}</div>
           </div>
+          <div class="sku-edit-hint">
+            <el-icon><Edit /></el-icon>
+            <span>点击编辑</span>
+          </div>
         </div>
         <div v-if="!productData?.sku_data?.length" class="no-sku">
           暂无规格信息
@@ -52,7 +97,10 @@
       </div>
     </div>
     <div class="detail-images-section">
-      <h3 class="section-title">详情图片</h3>
+      <div style="display: flex;flex-direction: row;justify-content: space-between;">
+        <h3 class="section-title">详情图片</h3>
+        <el-button type="primary">同步图片到Cloudflare</el-button>
+      </div>
       <div class="detail-images-container">
         <div 
           v-for="(image, index) in productData?.detail_images_cn || []" 
@@ -60,6 +108,24 @@
           class="detail-image-item"
         >
           <img :src="image" :alt="`详情图 ${index + 1}`" />
+          <div class="detail-image-actions">
+            <el-button
+              type="primary"
+              :icon="ZoomIn"
+              circle
+              size="small"
+              @click.stop="previewImage(image)"
+              title="放大预览"
+            />
+            <el-button
+              type="danger"
+              :icon="Delete"
+              circle
+              size="small"
+              @click.stop="confirmDeleteImage(index)"
+              title="删除图片"
+            />
+          </div>
         </div>
         <div v-if="!productData?.detail_images_cn?.length" class="no-images">
           暂无详情图片
@@ -69,6 +135,32 @@
     <div class="param-section">
       <div v-html="productData?.param_info_cn || '<p>暂无参数信息</p>'"></div>
     </div>
+    
+    <!-- SKU编辑弹窗 -->
+    <SkuEditModal
+      v-model="showSkuEditModal"
+      :sku-data="currentEditingSku"
+      :product-id="route.params.id"
+      :sku-index="currentSkuIndex"
+      @save-success="handleSkuSaveSuccess"
+    />
+    
+    <!-- 图片预览弹窗 -->
+    <el-dialog
+      v-model="showImagePreview"
+      title="图片预览"
+      width="80%"
+      :center="true"
+      class="image-preview-dialog"
+    >
+      <div class="image-preview-container">
+        <img 
+          :src="previewImageUrl" 
+          alt="预览图片"
+          class="preview-image"
+        />
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -76,10 +168,22 @@
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import axios from 'axios'
+import { ElMessageBox, ElMessage } from 'element-plus'
+import { Edit, CopyDocument, ZoomIn, Delete } from '@element-plus/icons-vue'
+import SkuEditModal from '../components/SkuEditModal.vue'
 const route = useRoute()
 const productData = ref(null)
 const loading = ref(false)
 const error = ref(null)
+
+// SKU编辑相关状态
+const showSkuEditModal = ref(false)
+const currentEditingSku = ref(null)
+const currentSkuIndex = ref(-1)
+
+// 图片预览相关状态
+const showImagePreview = ref(false)
+const previewImageUrl = ref('')
 
 // 获取产品详情
 const fetchProductDetail = async (productId) => {
@@ -94,8 +198,187 @@ const fetchProductDetail = async (productId) => {
   }
 }
 
+// 编辑英文标题
+const editTitleEn = async () => {
+  try {
+    const { value } = await ElMessageBox.prompt(
+      '请输入新的英文标题',
+      '编辑英文标题',
+      {
+        confirmButtonText: '确认',
+        cancelButtonText: '取消',
+        inputValue: productData.value?.title_en || '',
+        inputPlaceholder: '请输入英文标题'
+      }
+    )
+    
+    if (value && value.trim()) {
+      await updateProductTitle(value.trim())
+    }
+  } catch (error) {
+    // 用户取消操作
+  }
+}
+
+// 复制英文标题
+const copyTitleEn = async () => {
+  const titleEn = productData.value?.title_en
+  if (!titleEn) {
+    ElMessage.warning('暂无英文标题可复制')
+    return
+  }
+  
+  try {
+    await navigator.clipboard.writeText(titleEn)
+    ElMessage.success('英文标题已复制到剪贴板')
+  } catch (error) {
+    ElMessage.error('复制失败，请手动复制')
+  }
+}
+
+// 更新产品标题
+const updateProductTitle = async (newTitleEn) => {
+  try {
+    const productId = route.params.id
+    const updateData = {
+      ...productData.value,
+      title_en: newTitleEn
+    }
+    
+    await axios.put(`${window.lx_host}/products/${productId}`, updateData)
+    
+    // 更新本地数据
+    productData.value.title_en = newTitleEn
+    ElMessage.success('英文标题更新成功')
+  } catch (error) {
+    ElMessage.error('更新失败：' + (error.response?.data?.message || error.message))
+  }
+}
+
+// 编辑Shopify ID
+const editShopifyId = async () => {
+  try {
+    const { value } = await ElMessageBox.prompt(
+      '请输入新的Shopify ID',
+      '编辑Shopify ID',
+      {
+        confirmButtonText: '确认',
+        cancelButtonText: '取消',
+        inputValue: productData.value?.shopify_id || '',
+        inputPlaceholder: '请输入Shopify ID'
+      }
+    )
+    
+    if (value && value.trim()) {
+      await updateShopifyId(value.trim())
+    }
+  } catch (error) {
+    // 用户取消操作
+  }
+}
+
+// 复制Shopify ID
+const copyShopifyId = async () => {
+  const shopifyId = productData.value?.shopify_id
+  if (!shopifyId || shopifyId === 'N/A') {
+    ElMessage.warning('暂无Shopify ID可复制')
+    return
+  }
+  
+  try {
+    await navigator.clipboard.writeText(shopifyId)
+    ElMessage.success('Shopify ID已复制到剪贴板')
+  } catch (error) {
+    ElMessage.error('复制失败，请手动复制')
+  }
+}
+
+// 更新Shopify ID
+const updateShopifyId = async (newShopifyId) => {
+  try {
+    const productId = route.params.id
+    const updateData = {
+      ...productData.value,
+      shopify_id: newShopifyId
+    }
+    
+    await axios.put(`${window.lx_host}/products/${productId}`, updateData)
+    
+    // 更新本地数据
+    productData.value.shopify_id = newShopifyId
+    ElMessage.success('Shopify ID更新成功')
+  } catch (error) {
+    ElMessage.error('更新失败：' + (error.response?.data?.message || error.message))
+  }
+}
+
+// 打开SKU编辑弹窗
+const openSkuEditModal = (sku, index) => {
+  currentEditingSku.value = { ...sku }
+  currentSkuIndex.value = index
+  showSkuEditModal.value = true
+}
+
+// 处理SKU保存成功
+const handleSkuSaveSuccess = (result) => {
+  // 更新本地数据
+  if (productData.value && productData.value.sku_data && productData.value.sku_data[result.index]) {
+    Object.assign(productData.value.sku_data[result.index], result.data)
+  }
+}
+
+// 预览图片
+const previewImage = (imageUrl) => {
+  previewImageUrl.value = imageUrl
+  showImagePreview.value = true
+}
+
+// 确认删除图片
+const confirmDeleteImage = async (index) => {
+  try {
+    await ElMessageBox.confirm(
+      '确定要删除这张详情图片吗？',
+      '删除确认',
+      {
+        confirmButtonText: '确认删除',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+    
+    await deleteDetailImage(index)
+  } catch (error) {
+    // 用户取消操作
+  }
+}
+
+// 删除详情图片
+const deleteDetailImage = async (index) => {
+  try {
+    const productId = route.params.id
+    
+    // 创建新的详情图片数组，移除指定索引的图片
+    const newDetailImages = [...(productData.value?.detail_images_cn || [])]
+    newDetailImages.splice(index, 1)
+    
+    // 构建更新数据
+    const updateData = {
+      ...productData.value,
+      detail_images_cn: newDetailImages
+    }
+    
+    await axios.put(`${window.lx_host}/products/${productId}`, updateData)
+    
+    // 更新本地数据
+    productData.value.detail_images_cn = newDetailImages
+    ElMessage.success('图片删除成功')
+  } catch (error) {
+    ElMessage.error('删除失败：' + (error.response?.data?.message || error.message))
+  }
+}
+
 onMounted(() => {
-  const productId = route.params.id || '784411309594'
+  const productId = route.params.id
   fetchProductDetail(productId)
 })
 </script>
@@ -136,6 +419,26 @@ onMounted(() => {
   border: 1px solid #dee2e6;
 }
 
+.id-value-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.id-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.id-actions .el-button {
+  transition: all 0.3s ease;
+}
+
+.id-actions .el-button:hover {
+  transform: scale(1.1);
+}
+
 /* Product Titles Section */
 .product-titles {
   margin-bottom: 30px;
@@ -150,12 +453,34 @@ onMounted(() => {
   line-height: 1.3;
 }
 
+.title-en-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
 .title-en {
   font-size: 20px;
   font-weight: 400;
   color: #6c757d;
   margin: 0;
   line-height: 1.4;
+}
+
+.title-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.title-actions .el-button {
+  transition: all 0.3s ease;
+}
+
+.title-actions .el-button:hover {
+  transform: scale(1.1);
 }
 
 /* Section Titles */
@@ -248,7 +573,7 @@ onMounted(() => {
 .sku-item {
   flex: 0 0 auto;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   width: 200px;
@@ -258,12 +583,18 @@ onMounted(() => {
   overflow: hidden;
   transition: all 0.3s ease;
   cursor: pointer;
+  position: relative;
 }
 
 .sku-item:hover {
   border-color: #007bff;
   box-shadow: 0 6px 20px rgba(0, 123, 255, 0.15);
   transform: translateY(-3px);
+}
+
+.sku-item:hover .sku-edit-hint {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .sku-image {
@@ -312,6 +643,34 @@ onMounted(() => {
   color: #dc3545;
 }
 
+.sku-edit-hint {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 123, 255, 0.9);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.3s ease;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.sku-edit-hint .el-icon {
+  font-size: 24px;
+  margin-bottom: 4px;
+}
+
+.sku-edit-hint span {
+  font-size: 12px;
+}
+
 .detail-images-section {
   margin-bottom: 40px;
 }
@@ -347,16 +706,67 @@ onMounted(() => {
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease;
+  position: relative;
+  cursor: pointer;
 }
 
 .detail-image-item:hover {
   transform: scale(1.02);
 }
 
+.detail-image-item:hover .detail-image-actions {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .detail-image-item img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.detail-image-actions {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  border-radius: 8px;
+}
+
+.detail-image-actions .el-button {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* 图片预览弹窗样式 */
+.image-preview-dialog :deep(.el-dialog__body) {
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #000;
+}
+
+.image-preview-container {
+  width: 100%;
+  height: 70vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.preview-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 4px;
 }
 
 /* Param Section */
@@ -387,12 +797,31 @@ onMounted(() => {
     gap: 10px;
   }
   
+  .id-value-container {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .id-actions {
+    justify-content: flex-start;
+  }
+  
   .title-cn {
     font-size: 24px;
   }
   
   .title-en {
     font-size: 18px;
+  }
+  
+  .title-en-container {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .title-actions {
+    justify-content: center;
   }
   
   .section-title {
