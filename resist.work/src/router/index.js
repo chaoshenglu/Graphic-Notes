@@ -5,7 +5,7 @@ import AiDrawing from '../views/AiDrawing.vue'
 import ImageCompress from '../views/ImageCompress.vue'
 import DetailGenerate from '../views/DetailGenerate.vue'
 import ImageConvert from '../views/ImageConvert.vue'
-import GridCut from '../views/GridCut.vue'
+import ProductList from '../views/ProductList.vue'
 import Watermark from '../views/Watermark.vue'
 import QrDecode from '../views/QrDecode.vue'
 import Base64Image from '../views/Base64Image.vue'
@@ -42,9 +42,9 @@ const routes = [
     component: ImageConvert
   },
   {
-    path: '/grid-cut',
-    name: 'GridCut',
-    component: GridCut
+    path: '/product-list',
+    name: 'ProductList',
+    component: ProductList
   },
   {
     path: '/watermark',

@@ -54,10 +54,10 @@ const tools = ref([
     description: '图片格式转换'
   },
   {
-    id: 'grid-cut',
-    name: '九宫格切图',
+    id: 'product-list',
+    name: '产品列表',
     icon: '⚏',
-    description: '图片九宫格切割'
+    description: '豪蒂灯饰产品列表'
   },
   {
     id: 'watermark',

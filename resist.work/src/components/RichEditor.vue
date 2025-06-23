@@ -136,7 +136,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick, defineProps, defineEmits } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 import notesDB from '../utils/database.js'
 
 const props = defineProps({

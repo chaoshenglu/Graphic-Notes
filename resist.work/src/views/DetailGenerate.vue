@@ -79,7 +79,6 @@ const formData = reactive({
 const generatedCode = ref('')
 // 是否显示代码区域
 const showCodeArea = ref(false)
-
 // 生成HTML代码
 const generateHtmlCode = () => {
   const { id, count } = formData
