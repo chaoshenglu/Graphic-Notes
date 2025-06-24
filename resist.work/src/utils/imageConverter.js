@@ -1,10 +1,6 @@
 // 图片转换工具类
 // 使用Squoosh将图片转换为WebP格式
 
-// 配置 WASM 文件路径
-import.meta.env = import.meta.env || {};
-import.meta.env.VITE_PUBLIC_PATH = import.meta.env.VITE_PUBLIC_PATH || '';
-
 /**
  * 使用Squoosh将图片转换为WebP格式
  * @param {Blob} blob - 原始图片Blob对象
