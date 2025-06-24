@@ -55,7 +55,18 @@
       </div>
     </div>
     <div class="main-images-section">
-      <h3 class="section-title">主图展示</h3>
+      <div class="section-header">
+        <h3 class="section-title">主图</h3>
+        <el-button 
+          type="primary" 
+          :icon="Download" 
+          size="small" 
+          circle 
+          @click="downloadAllMainImages"
+          title="下载全部主图"
+          :disabled="!productData?.main_images_cn?.length"
+        />
+      </div>
       <div class="main-images-container">
         <div 
           v-for="(image, index) in productData?.main_images_cn || []" 
@@ -70,7 +81,18 @@
       </div>
     </div>
     <div class="sku-section">
-      <h3 class="section-title">规格选择</h3>
+      <div class="section-header">
+        <h3 class="section-title">规格选择</h3>
+        <el-button 
+          type="primary" 
+          :icon="Download" 
+          size="small" 
+          circle 
+          @click="downloadAllSkuImages"
+          title="下载全部SKU图片"
+          :disabled="!productData?.sku_data?.length"
+        />
+      </div>
       <div class="sku-container">
         <div 
           v-for="(sku, index) in productData?.sku_data || []" 
@@ -97,9 +119,9 @@
       </div>
     </div>
     <div class="detail-images-section">
-      <div style="display: flex;flex-direction: row;justify-content: space-between;">
+      <div class="detail-section-header">
         <h3 class="section-title">详情图片</h3>
-        <el-button type="primary">同步图片到Cloudflare</el-button>
+        <el-button type="primary" @click="syncImagesToCloudflare" :loading="uploading">同步图片到Cloudflare</el-button>
       </div>
       <div class="detail-images-container">
         <div 
@@ -169,12 +191,13 @@ import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import axios from 'axios'
 import { ElMessageBox, ElMessage } from 'element-plus'
-import { Edit, CopyDocument, ZoomIn, Delete } from '@element-plus/icons-vue'
+import { Edit, CopyDocument, ZoomIn, Delete, Download } from '@element-plus/icons-vue'
 import SkuEditModal from '../components/SkuEditModal.vue'
 const route = useRoute()
 const productData = ref(null)
 const loading = ref(false)
 const error = ref(null)
+const uploading = ref(false)
 
 // SKU编辑相关状态
 const showSkuEditModal = ref(false)
@@ -377,6 +400,158 @@ const deleteDetailImage = async (index) => {
   }
 }
 
+// 下载单张图片
+const downloadImage = async (imageUrl, filename) => {
+  try {
+    const response = await fetch(imageUrl)
+    const blob = await response.blob()
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+  } catch (error) {
+    console.error('下载图片失败:', error)
+    throw error
+  }
+}
+
+// 下载全部主图
+const downloadAllMainImages = async () => {
+  const mainImages = productData.value?.main_images_cn
+  if (!mainImages || mainImages.length === 0) {
+    ElMessage.warning('暂无主图可下载')
+    return
+  }
+  
+  try {
+    ElMessage.info('开始下载主图，请稍候...')
+    
+    for (let i = 0; i < mainImages.length; i++) {
+      const imageUrl = mainImages[i]
+      const filename = `主图_${i + 1}.jpg`
+      await downloadImage(imageUrl, filename)
+      
+      // 添加延迟避免浏览器阻止多个下载
+      if (i < mainImages.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 500))
+      }
+    }
+    
+    ElMessage.success(`成功下载 ${mainImages.length} 张主图`)
+  } catch (error) {
+    ElMessage.error('下载失败：' + error.message)
+  }
+}
+
+// 下载全部SKU图片
+const downloadAllSkuImages = async () => {
+  const skuData = productData.value?.sku_data
+  if (!skuData || skuData.length === 0) {
+    ElMessage.warning('暂无SKU图片可下载')
+    return
+  }
+  
+  try {
+    ElMessage.info('开始下载SKU图片，请稍候...')
+    
+    for (let i = 0; i < skuData.length; i++) {
+      const sku = skuData[i]
+      if (sku.skuImageUrl) {
+        const filename = `SKU_${sku.skuNameCn || `规格${i + 1}`}.jpg`
+        await downloadImage(sku.skuImageUrl, filename)
+        
+        // 添加延迟避免浏览器阻止多个下载
+        if (i < skuData.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 500))
+        }
+      }
+    }
+    
+    const validSkuCount = skuData.filter(sku => sku.skuImageUrl).length
+    ElMessage.success(`成功下载 ${validSkuCount} 张SKU图片`)
+  } catch (error) {
+    ElMessage.error('下载失败：' + error.message)
+  }
+}
+
+// 同步图片到Cloudflare
+const syncImagesToCloudflare = async () => {
+  const detailImages = productData.value?.detail_images_cn
+  if (!detailImages || detailImages.length === 0) {
+    ElMessage.warning('暂无详情图片可同步')
+    return
+  }
+  
+  try {
+    uploading.value = true
+    ElMessage.info(`开始同步 ${detailImages.length} 张详情图片到Cloudflare，请稍候...`)
+    
+    const uploadedUrls = []
+    
+    for (let i = 0; i < detailImages.length; i++) {
+      const imageUrl = detailImages[i]
+      
+      try {
+        // 获取图片数据
+        const response = await fetch(imageUrl)
+        if (!response.ok) {
+          throw new Error(`获取图片失败: ${response.statusText}`)
+        }
+        
+        const blob = await response.blob()
+        
+        // 创建FormData
+        const formData = new FormData()
+        const filename = `detail_image_${Date.now()}_${i + 1}.jpg`
+        
+        // 创建File对象
+        const file = new File([blob], filename, { type: blob.type || 'image/jpeg' })
+        formData.append('file', file)
+        
+        // 上传到Cloudflare R2
+        const uploadResponse = await axios.post(`${window.lx_host}/upload-to-r2`, formData, {
+          headers: {
+            // 不设置Content-Type，让浏览器自动设置multipart/form-data边界
+          }
+        })
+        
+        if (uploadResponse.data.success) {
+          uploadedUrls.push(uploadResponse.data.url)
+          ElMessage.success(`第 ${i + 1} 张图片上传成功`)
+        } else {
+          throw new Error(uploadResponse.data.message || '上传失败')
+        }
+        
+        // 添加延迟避免请求过于频繁
+        if (i < detailImages.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 500))
+        }
+        
+      } catch (error) {
+        console.error(`上传第 ${i + 1} 张图片失败:`, error)
+        ElMessage.error(`第 ${i + 1} 张图片上传失败: ${error.message}`)
+      }
+    }
+    
+    if (uploadedUrls.length > 0) {
+      ElMessage.success(`成功同步 ${uploadedUrls.length} 张图片到Cloudflare R2`)
+      console.log('上传成功的图片URLs:', uploadedUrls)
+    } else {
+      ElMessage.error('没有图片上传成功')
+    }
+    
+  } catch (error) {
+    console.error('同步图片失败:', error)
+    ElMessage.error('同步失败：' + error.message)
+  } finally {
+    uploading.value = false
+  }
+}
+
 onMounted(() => {
   const productId = route.params.id
   fetchProductDetail(productId)
@@ -497,6 +672,38 @@ onMounted(() => {
 /* Main Images Section */
 .main-images-section {
   margin-bottom: 40px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.section-header .section-title {
+  margin: 0;
+  margin-bottom: 0;
+}
+
+.section-header .el-button {
+  transition: all 0.3s ease;
+}
+
+.section-header .el-button:hover:not(:disabled) {
+  transform: scale(1.1);
+}
+
+.detail-section-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.detail-section-header .section-title {
+  margin: 0;
+  margin-bottom: 0;
 }
 
 .main-images-container {
