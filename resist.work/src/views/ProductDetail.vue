@@ -1,10 +1,10 @@
 <template>
-  <div class="product-detail">
-    <div class="product-titles">
-      <h1 class="title-cn">{{ productData?.title_cn || 'No Chinese Title' }}</h1>
-      <div class="title-en-container">
-        <h2 class="title-en">{{ productData?.title_en || 'No English Title' }}</h2>
-        <div class="title-actions">
+  <div class="max-w-6xl mx-auto p-5 font-sans">
+    <div class="mb-8 text-center">
+      <h1 class="text-3xl font-bold text-gray-800 mb-3 leading-tight">{{ productData?.title_cn || 'No Chinese Title' }}</h1>
+      <div class="flex items-center justify-center gap-4 flex-wrap">
+        <h2 class="text-xl font-normal text-gray-600 m-0 leading-relaxed">{{ productData?.title_en || 'No English Title' }}</h2>
+        <div class="flex gap-2 items-center">
           <el-button 
             type="primary" 
             :icon="Edit" 
@@ -12,6 +12,7 @@
             circle 
             @click="editTitleEn"
             title="编辑英文标题"
+            class="transition-transform duration-300 hover:scale-110"
           />
           <el-button 
             type="success" 
@@ -20,43 +21,44 @@
             circle 
             @click="copyTitleEn"
             title="复制英文标题"
+            class="transition-transform duration-300 hover:scale-110"
           />
         </div>
       </div>
     </div>
-    <div class="product-ids">
-      <div class="id-item">
-        <span class="id-label">Product ID:</span>
-        <span class="id-value">{{ productData?.product_id || 'N/A' }}</span>
+    <div class="flex items-center gap-5 mb-5 flex-wrap">
+      <div class="flex items-center gap-2">
+        <span class="font-semibold text-gray-900 text-15px">Product ID:</span>
+        <span class="text-blue-600 text-15px bg-white px-2 py-1 rounded border border-gray-300">{{ productData?.product_id || 'N/A' }}</span>
       </div>
-      <div class="id-item">
-        <span class="id-label">Shopify ID:</span>
-        <div class="id-value-container">
-          <span class="id-value">{{ productData?.shopify_id || 'N/A' }}</span>
-          <div class="id-actions">
-            <el-button 
-              type="primary" 
-              :icon="Edit" 
-              size="small" 
-              circle 
-              @click="editShopifyId"
-              title="编辑Shopify ID"
-            />
-            <el-button 
-              type="success" 
-              :icon="CopyDocument" 
-              size="small" 
-              circle 
-              @click="copyShopifyId"
-              title="复制Shopify ID"
-            />
-          </div>
-        </div>
+      <div class="flex items-center gap-2">
+        <span class="font-semibold text-gray-900 text-15px">Shopify ID:</span>
+        <span class="text-blue-600 text-15px bg-white px-2 py-1 rounded border border-gray-300">{{ productData?.shopify_id || 'N/A' }}</span>
+      </div>
+      <div class="flex gap-2 items-center">
+        <el-button 
+          type="primary" 
+          :icon="Edit" 
+          size="small" 
+          circle 
+          @click="editShopifyId"
+          title="编辑Shopify ID"
+          class="transition-transform duration-300 hover:scale-110"
+        />
+        <el-button 
+          type="success" 
+          :icon="CopyDocument" 
+          size="small" 
+          circle 
+          @click="copyShopifyId"
+          title="复制Shopify ID"
+          class="transition-transform duration-300 hover:scale-110"
+        />
       </div>
     </div>
-    <div class="main-images-section">
-      <div class="section-header">
-        <h3 class="section-title">主图</h3>
+    <div class="mb-10">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-20px font-semibold text-gray-900 m-0 pb-2 inline-block" style="border-bottom: 2px solid #007bff;">主图</h3>
         <el-button 
           type="primary" 
           :icon="Download" 
@@ -65,24 +67,25 @@
           @click="downloadAllMainImages"
           title="下载全部主图"
           :disabled="!productData?.main_images_cn?.length"
+          class="transition-transform duration-300 hover:scale-110 disabled:hover:scale-100"
         />
       </div>
-      <div class="main-images-container">
+      <div class="flex gap-4 overflow-x-auto py-3">
         <div 
           v-for="(image, index) in productData?.main_images_cn || []" 
           :key="index" 
-          class="main-image-item"
+          class="flex-shrink-0 w-50 h-50 rounded-xl overflow-hidden transition-transform duration-300 hover:-translate-y-1"
         >
-          <img :src="image" :alt="`主图 ${index + 1}`" />
+          <img :src="image" :alt="`主图 ${index + 1}`" class="w-full h-full object-cover" />
         </div>
-        <div v-if="!productData?.main_images_cn?.length" class="no-images">
+        <div v-if="!productData?.main_images_cn?.length" class="text-center py-10 text-gray-600 text-base bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 w-full">
           暂无主图
         </div>
       </div>
     </div>
-    <div class="sku-section">
-      <div class="section-header">
-        <h3 class="section-title">规格选择</h3>
+    <div class="mb-10">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-20px font-semibold text-gray-900 m-0 pb-2 inline-block"  style="border-bottom: 2px solid #007bff;">规格选择</h3>
         <el-button 
           type="primary" 
           :icon="Download" 
@@ -91,46 +94,47 @@
           @click="downloadAllSkuImages"
           title="下载全部SKU图片"
           :disabled="!productData?.sku_data?.length"
+          class="transition-transform duration-300 hover:scale-110 disabled:hover:scale-100"
         />
       </div>
-      <div class="sku-container">
+      <div class="flex gap-4 overflow-x-auto py-4">
         <div 
           v-for="(sku, index) in productData?.sku_data || []" 
           :key="index" 
-          class="sku-item"
+          class="flex-shrink-0 flex flex-col items-center justify-center w-50 bg-white border-2 border-gray-200 rounded-xl overflow-hidden transition-all duration-300 cursor-pointer relative hover:border-blue-600 hover:shadow-xl hover:-translate-y-1 group"
           @click="openSkuEditModal(sku, index)"
         >
-          <div class="sku-image">
-            <img :src="sku.skuImageUrl" :alt="sku.skuNameCn" />
+          <div class="w-full h-48 overflow-hidden flex items-center justify-center">
+            <img :src="sku.skuImageUrl" :alt="sku.skuNameCn" class="w-3/5 h-3/5 object-cover transition-transform duration-300 group-hover:scale-105" />
           </div>
-          <div class="sku-info">
-            <div class="sku-name-cn">{{ sku.skuNameCn }}</div>
-            <div class="sku-name-en">{{ sku.skuNameEn || 'No English Name' }}</div>
-            <div class="sku-price">{{ sku.price ? `¥${sku.price}` : '价格待定' }}</div>
+          <div class="p-3">
+            <div class="text-sm font-semibold text-gray-800 mb-1 leading-tight">{{ sku.skuNameCn }}</div>
+            <div class="text-xs text-gray-600 mb-2 leading-tight">{{ sku.skuNameEn || 'No English Name' }}</div>
+            <div class="text-base font-bold text-red-600">{{ sku.price ? `¥${sku.price}` : '价格待定' }}</div>
           </div>
-          <div class="sku-edit-hint">
-            <el-icon><Edit /></el-icon>
-            <span>点击编辑</span>
+          <div class="absolute inset-0 bg-blue-600/90 text-white flex flex-col items-center justify-center opacity-0 translate-y-3 transition-all duration-300 text-sm font-medium group-hover:opacity-100 group-hover:translate-y-0">
+            <el-icon class="text-6 mb-1"><Edit /></el-icon>
+            <span class="text-xs">点击编辑</span>
           </div>
         </div>
-        <div v-if="!productData?.sku_data?.length" class="no-sku">
+        <div v-if="!productData?.sku_data?.length" class="text-center py-10 text-gray-600 text-base bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 w-full">
           暂无规格信息
         </div>
       </div>
     </div>
-    <div class="detail-images-section">
-      <div class="detail-section-header">
-        <h3 class="section-title">详情图片</h3>
+    <div class="mb-10">
+      <div class="flex items-end justify-between mb-4">
+        <h3 class="text-20px font-semibold text-gray-900 m-0 pb-2 inline-block"  style="border-bottom: 2px solid #007bff;">详情图片</h3>
         <el-button type="primary" @click="syncImagesToCloudflare" :loading="uploading">同步图片到Cloudflare</el-button>
       </div>
-      <div class="detail-images-container">
+      <div class="flex gap-4 overflow-x-auto py-3">
         <div 
           v-for="(image, index) in productData?.detail_images_cn || []" 
           :key="index" 
-          class="detail-image-item"
+          class="flex-shrink-0 w-50 h-50 rounded-lg overflow-hidden transition-transform duration-300 relative cursor-pointer hover:scale-102 group"
         >
-          <img :src="image" :alt="`详情图 ${index + 1}`" />
-          <div class="detail-image-actions">
+          <img :src="image" :alt="`详情图 ${index + 1}`" class="w-full h-full object-cover" />
+          <div class="absolute inset-0 bg-black/50 flex items-center justify-center gap-3 opacity-0 transition-opacity duration-300 rounded-lg group-hover:opacity-100">
             <el-button
               type="primary"
               :icon="ZoomIn"
@@ -149,22 +153,43 @@
             />
           </div>
         </div>
-        <div v-if="!productData?.detail_images_cn?.length" class="no-images">
+        <div v-if="!productData?.detail_images_cn?.length" class="text-center py-10 text-gray-600 text-base bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 w-full">
           暂无详情图片
         </div>
       </div>
     </div>
-    <div class="param-section">
-      <div v-html="productData?.param_info_cn || '<p>暂无参数信息</p>'"></div>
-      <div class="param-edit-container">
+    <div class="mb-10" style="position: relative;">
+      <div style="position: absolute;right: 0;top:0;">
         <el-button 
           type="primary" 
           :icon="Edit" 
           @click="editParamHtml"
-          class="edit-html-btn"
+          class="transition-transform duration-300 hover:scale-105"
         >
           编辑HTML
         </el-button>
+        <el-button 
+          type="primary" 
+          :icon="Edit" 
+          @click="translateParamHtml"
+          class="transition-transform duration-300 hover:scale-105"
+        >
+          翻译HTML
+        </el-button>
+      </div>
+      <div v-html="productData?.param_info_cn || '<p>暂无中文参数信息</p>'"></div>
+      <div style="position: relative;">
+        <div style="position: absolute;right: 0;top:0;">
+        <el-button 
+          type="primary" 
+          :icon="Edit" 
+          @click="editEnglishParamHtml"
+          class="transition-transform duration-300 hover:scale-105"
+        >
+          编辑HTML
+        </el-button>
+      </div>
+      <div v-html="productData?.param_info_en || '<p>暂无英文信息</p>'"></div>
       </div>
     </div>
     
@@ -183,13 +208,12 @@
       title="图片预览"
       width="80%"
       :center="true"
-      class="image-preview-dialog"
     >
-      <div class="image-preview-container">
+      <div class="w-full h-70vh flex justify-center items-center bg-black p-0">
         <img 
           :src="previewImageUrl" 
           alt="预览图片"
-          class="preview-image"
+          class="max-w-full max-h-full object-contain rounded"
         />
       </div>
     </el-dialog>
@@ -197,20 +221,20 @@
     <!-- HTML编辑弹窗 -->
     <el-dialog
       v-model="showHtmlEditModal"
-      title="编辑参数信息HTML"
+      :title="editingLanguage === 'cn' ? '编辑中文参数信息HTML' : '编辑英文参数信息HTML'"
       width="70%"
       :center="true"
-      class="html-edit-dialog"
+      class="mt-5vh mb-5vh max-h-90vh flex flex-col"
     >
       <el-input
         v-model="editingHtmlContent"
         type="textarea"
         placeholder="请输入HTML内容"
-        class="html-editor"
+        class="font-mono text-sm leading-relaxed"
         :autosize="{ minRows: 25, maxRows: 35 }"
       />
       <template #footer>
-        <span class="dialog-footer">
+        <span class="flex justify-end gap-3">
           <el-button @click="showHtmlEditModal = false">取消</el-button>
           <el-button type="warning" @click="cleanTitleAttributes">清理</el-button>
           <el-button type="primary" @click="saveParamHtml" :loading="savingHtml">保存</el-button>
@@ -247,6 +271,7 @@ const previewImageUrl = ref('')
 const showHtmlEditModal = ref(false)
 const editingHtmlContent = ref('')
 const savingHtml = ref(false)
+const editingLanguage = ref('cn') // 'cn' 表示编辑中文，'en' 表示编辑英文
 
 // 获取产品详情
 const fetchProductDetail = async (productId) => {
@@ -321,7 +346,82 @@ const updateProductTitle = async (newTitleEn) => {
 // 编辑参数HTML
 const editParamHtml = () => {
   editingHtmlContent.value = productData.value?.param_info_cn || ''
+  editingLanguage.value = 'cn'
   showHtmlEditModal.value = true
+}
+
+// 编辑英文版参数HTML
+const editEnglishParamHtml = () => {
+  editingHtmlContent.value = productData.value?.param_info_en || ''
+  editingLanguage.value = 'en'
+  showHtmlEditModal.value = true
+}
+
+// 翻译HTML
+const translateParamHtml = async () => {
+  const paramInfoCn = productData.value?.param_info_cn
+  if (!paramInfoCn || paramInfoCn.trim() === '') {
+    ElMessage.warning('暂无中文参数信息可翻译')
+    return
+  }
+  
+  try {
+    ElMessage.info('正在翻译参数信息，请稍候...')
+    
+    // 调用豆包API进行翻译
+    const response = await fetch('https://ark.cn-beijing.volces.com/api/v3/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${window.lx_doubao}`
+      },
+      body: JSON.stringify({
+        model: 'doubao-seed-1-6-250615',
+        messages: [
+          {
+            content: [
+              {
+                text: `请将下面的代码中的中文翻译成英文(翻译后按原代码格式返回)：${paramInfoCn}`,
+                type: 'text'
+              }
+            ],
+            role: 'user'
+          }
+        ]
+      })
+    })
+    
+    if (!response.ok) {
+      throw new Error(`翻译API请求失败: ${response.statusText}`)
+    }
+    
+    const result = await response.json()
+    
+    if (result.choices && result.choices.length > 0) {
+      const translatedContent = result.choices[0].message.content
+      
+      // 更新产品数据中的英文参数信息
+      const productId = route.params.id
+      const updateData = {
+        ...productData.value,
+        param_info_en: translatedContent
+      }
+      
+      // 保存到数据库
+      await axios.put(`${window.lx_host}/products/${productId}`, updateData)
+      
+      // 更新本地数据
+      productData.value.param_info_en = translatedContent
+      
+      ElMessage.success('参数信息翻译并保存成功')
+    } else {
+      throw new Error('翻译API返回数据格式异常')
+    }
+    
+  } catch (error) {
+    console.error('翻译失败:', error)
+    ElMessage.error('翻译失败：' + (error.message || '未知错误'))
+  }
 }
 
 // 保存参数HTML
@@ -329,17 +429,30 @@ const saveParamHtml = async () => {
   try {
     savingHtml.value = true
     const productId = route.params.id
+    
+    // 根据当前编辑的语言决定更新哪个字段
     const updateData = {
-      ...productData.value,
-      param_info_cn: editingHtmlContent.value
+      ...productData.value
+    }
+    
+    if (editingLanguage.value === 'cn') {
+      updateData.param_info_cn = editingHtmlContent.value
+    } else {
+      updateData.param_info_en = editingHtmlContent.value
     }
     
     await axios.put(`${window.lx_host}/products/${productId}`, updateData)
     
     // 更新本地数据
-    productData.value.param_info_cn = editingHtmlContent.value
+    if (editingLanguage.value === 'cn') {
+      productData.value.param_info_cn = editingHtmlContent.value
+      ElMessage.success('中文参数信息更新成功')
+    } else {
+      productData.value.param_info_en = editingHtmlContent.value
+      ElMessage.success('英文参数信息更新成功')
+    }
+    
     showHtmlEditModal.value = false
-    ElMessage.success('参数信息更新成功')
   } catch (error) {
     ElMessage.error('更新失败：' + (error.response?.data?.message || error.message))
   } finally {
@@ -355,28 +468,21 @@ const cleanTitleAttributes = () => {
       ElMessage.warning('暂无内容可清理')
       return
     }
-    
-    // 使用正则表达式匹配所有title属性
     // 匹配模式：title="任何内容"（包括转义字符）
     const titlePattern = /\s+title="[^"]*"/g
-    
-    // 查找所有匹配的title属性
     const matches = content.match(titlePattern)
-    
-    if (!matches || matches.length === 0) {
-      ElMessage.info('未找到title属性')
-      return
-    }
-    
-    // 删除所有title属性
-    const newContent = content.replace(titlePattern, '')
-    
-    // 更新编辑内容
+    let newContent = content
+    if (!matches) {
+      console.log('未找到title属性')
+    }else{
+      newContent = content.replace(titlePattern, '')
+    }    
+    newContent = newContent.replace("豪蒂（家装灯饰）","Hauty")
+    newContent = newContent.replace("豪蒂","Hauty")
+    newContent = newContent.replace("10年","1年")
     editingHtmlContent.value = newContent
-    
-    ElMessage.success(`成功清理了 ${matches.length} 个title属性`)
   } catch (error) {
-    ElMessage.error('清理失败：' + error.message)
+    console.log(error)
   }
 }
 
@@ -470,7 +576,6 @@ const confirmDeleteImage = async (index) => {
         type: 'warning'
       }
     )
-    
     await deleteDetailImage(index)
   } catch (error) {
     // 用户取消操作
@@ -481,20 +586,13 @@ const confirmDeleteImage = async (index) => {
 const deleteDetailImage = async (index) => {
   try {
     const productId = route.params.id
-    
-    // 创建新的详情图片数组，移除指定索引的图片
     const newDetailImages = [...(productData.value?.detail_images_cn || [])]
     newDetailImages.splice(index, 1)
-    
-    // 构建更新数据
     const updateData = {
       ...productData.value,
       detail_images_cn: newDetailImages
     }
-    
     await axios.put(`${window.lx_host}/products/${productId}`, updateData)
-    
-    // 更新本地数据
     productData.value.detail_images_cn = newDetailImages
     ElMessage.success('图片删除成功')
   } catch (error) {
@@ -580,8 +678,6 @@ const downloadAllSkuImages = async () => {
   }
 }
 
-
-
 // 同步图片到Cloudflare
 const syncImagesToCloudflare = async () => {
   const detailImages = productData.value?.detail_images_cn
@@ -600,31 +696,21 @@ const syncImagesToCloudflare = async () => {
       const imageUrl = detailImages[i]
       
       try {
-        // 获取图片数据
         const response = await fetch(imageUrl)
         if (!response.ok) {
           throw new Error(`获取图片失败: ${response.statusText}`)
         }
-        
         const blob = await response.blob()
-        
-        // 使用Squoosh转换为WebP格式
         ElMessage.info(`正在使用Squoosh转换第 ${i + 1} 张图片为WebP格式...`)
         const webpBlob = await convertToWebP(blob)
-        
-        // 创建FormData
         const formData = new FormData()
         const filename = `${productData.value.product_id}/detail/${i + 1}.webp`
-        
-        // 创建File对象
         const file = new File([webpBlob], filename, { type: 'image/webp' })
         formData.append('file', file)
         
         // 上传到Cloudflare R2
         const uploadResponse = await axios.post(`${window.lx_host}/upload-to-r2`, formData, {
-          headers: {
-            // 不设置Content-Type，让浏览器自动设置multipart/form-data边界
-          }
+          headers: {}
         })
         
         if (uploadResponse.data.success) {
@@ -665,567 +751,3 @@ onMounted(() => {
   fetchProductDetail(productId)
 })
 </script>
-
-<style scoped>
-.product-detail {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
-
-.product-ids {
-  display: flex;
-  gap: 20px;
-  margin-bottom: 20px;
-}
-
-.id-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.id-label {
-  font-weight: 600;
-  color: #495057;
-  font-size: 14px;
-}
-
-.id-value {
-  color: #007bff;
-  font-family: 'Monaco', 'Menlo', monospace;
-  font-size: 14px;
-  background: #fff;
-  padding: 4px 8px;
-  border-radius: 4px;
-  border: 1px solid #dee2e6;
-}
-
-.id-value-container {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.id-actions {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-}
-
-.id-actions .el-button {
-  transition: all 0.3s ease;
-}
-
-.id-actions .el-button:hover {
-  transform: scale(1.1);
-}
-
-/* Product Titles Section */
-.product-titles {
-  margin-bottom: 30px;
-  text-align: center;
-}
-
-.title-cn {
-  font-size: 28px;
-  font-weight: 700;
-  color: #212529;
-  margin: 0 0 10px 0;
-  line-height: 1.3;
-}
-
-.title-en-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 15px;
-  flex-wrap: wrap;
-}
-
-.title-en {
-  font-size: 20px;
-  font-weight: 400;
-  color: #6c757d;
-  margin: 0;
-  line-height: 1.4;
-}
-
-.title-actions {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.title-actions .el-button {
-  transition: all 0.3s ease;
-}
-
-.title-actions .el-button:hover {
-  transform: scale(1.1);
-}
-
-/* Section Titles */
-.section-title {
-  font-size: 22px;
-  font-weight: 600;
-  color: #11192d;
-  margin: 30px 0 16px 0;
-  padding-bottom: 8px;
-  border-bottom: 2px solid #007bff;
-  display: inline-block;
-}
-
-/* Main Images Section */
-.main-images-section {
-  margin-bottom: 40px;
-}
-
-.section-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px;
-}
-
-.section-header .section-title {
-  margin: 0;
-  margin-bottom: 0;
-}
-
-.section-header .el-button {
-  transition: all 0.3s ease;
-}
-
-.section-header .el-button:hover:not(:disabled) {
-  transform: scale(1.1);
-}
-
-.detail-section-header {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  margin-bottom: 16px;
-}
-
-.detail-section-header .section-title {
-  margin: 0;
-  margin-bottom: 0;
-}
-
-.main-images-container {
-  display: flex;
-  gap: 15px;
-  overflow-x: auto;
-  padding: 10px 0;
-  scrollbar-width: thin;
-  scrollbar-color: #007bff #f1f3f4;
-}
-
-.main-images-container::-webkit-scrollbar {
-  height: 8px;
-}
-
-.main-images-container::-webkit-scrollbar-track {
-  background: #f1f3f4;
-  border-radius: 4px;
-}
-
-.main-images-container::-webkit-scrollbar-thumb {
-  background: #007bff;
-  border-radius: 4px;
-}
-
-.main-image-item {
-  flex: 0 0 auto;
-  width: 200px;
-  height: 200px;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease;
-}
-
-.main-image-item:hover {
-  transform: translateY(-5px);
-}
-
-.main-image-item img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-/* SKU Section */
-.sku-section {
-  margin-bottom: 40px;
-}
-
-.sku-container {
-  display: flex;
-  gap: 16px;
-  overflow-x: auto;
-  padding: 15px 0;
-  scrollbar-width: thin;
-  scrollbar-color: #007bff #f1f3f4;
-}
-
-.sku-container::-webkit-scrollbar {
-  height: 8px;
-}
-
-.sku-container::-webkit-scrollbar-track {
-  background: #f1f3f4;
-  border-radius: 4px;
-}
-
-.sku-container::-webkit-scrollbar-thumb {
-  background: #007bff;
-  border-radius: 4px;
-}
-
-.sku-item {
-  flex: 0 0 auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 200px;
-  background: #fff;
-  border: 2px solid #e9ecef;
-  border-radius: 12px;
-  overflow: hidden;
-  transition: all 0.3s ease;
-  cursor: pointer;
-  position: relative;
-}
-
-.sku-item:hover {
-  border-color: #007bff;
-  box-shadow: 0 6px 20px rgba(0, 123, 255, 0.15);
-  transform: translateY(-3px);
-}
-
-.sku-item:hover .sku-edit-hint {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.sku-image {
-  width: 100%;
-  height: 190px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-}
-
-.sku-image img {
-  width: 70%;
-  height: 70%;
-  object-fit: cover;
-  transition: transform 0.3s ease;
-}
-
-.sku-item:hover .sku-image img {
-  transform: scale(1.05);
-}
-
-.sku-info {
-  padding: 12px;
-}
-
-.sku-name-cn {
-  font-size: 14px;
-  font-weight: 600;
-  color: #212529;
-  margin-bottom: 4px;
-  line-height: 1.3;
-}
-
-.sku-name-en {
-  font-size: 12px;
-  color: #6c757d;
-  margin-bottom: 8px;
-  line-height: 1.2;
-}
-
-.sku-price {
-  font-size: 16px;
-  font-weight: 700;
-  color: #dc3545;
-}
-
-.sku-edit-hint {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 123, 255, 0.9);
-  color: white;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transform: translateY(10px);
-  transition: all 0.3s ease;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.sku-edit-hint .el-icon {
-  font-size: 24px;
-  margin-bottom: 4px;
-}
-
-.sku-edit-hint span {
-  font-size: 12px;
-}
-
-.detail-images-section {
-  margin-bottom: 40px;
-}
-
-.detail-images-container {
-  display: flex;
-  gap: 15px;
-  overflow-x: auto;
-  padding: 10px 0;
-  scrollbar-width: thin;
-  scrollbar-color: #007bff #f1f3f4;
-}
-
-.detail-images-container::-webkit-scrollbar {
-  height: 8px;
-}
-
-.detail-images-container::-webkit-scrollbar-track {
-  background: #f1f3f4;
-  border-radius: 4px;
-}
-
-.detail-images-container::-webkit-scrollbar-thumb {
-  background: #007bff;
-  border-radius: 4px;
-}
-
-.detail-image-item {
-  flex: 0 0 auto;
-  width: 200px;
-  height: 200px;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease;
-  position: relative;
-  cursor: pointer;
-}
-
-.detail-image-item:hover {
-  transform: scale(1.02);
-}
-
-.detail-image-item:hover .detail-image-actions {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.detail-image-item img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.detail-image-actions {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  border-radius: 8px;
-}
-
-.detail-image-actions .el-button {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
-
-/* 图片预览弹窗样式 */
-.image-preview-dialog :deep(.el-dialog__body) {
-  padding: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: #000;
-}
-
-.image-preview-container {
-  width: 100%;
-  height: 70vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.preview-image {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  border-radius: 4px;
-}
-
-/* Param Section */
-.param-section {
-  margin-bottom: 40px;
-}
-
-/* No Content Messages */
-.no-images,
-.no-sku {
-  text-align: center;
-  padding: 40px;
-  color: #6c757d;
-  font-size: 16px;
-  background: #f8f9fa;
-  border-radius: 8px;
-  border: 2px dashed #dee2e6;
-}
-
-/* Param Section */
-.param-section {
-  margin-bottom: 40px;
-}
-
-.param-edit-container {
-  display: flex;
-  justify-content: center;
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid #e9ecef;
-}
-
-.edit-html-btn {
-  transition: all 0.3s ease;
-}
-
-.edit-html-btn:hover {
-  transform: scale(1.05);
-}
-
-/* HTML Edit Dialog */
-.html-edit-dialog .el-dialog {
-  margin-top: 5vh !important;
-  margin-bottom: 5vh !important;
-  max-height: 90vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.html-edit-dialog .el-dialog__body {
-  padding: 20px;
-  overflow-y: auto;
-  flex: 1;
-}
-
-.html-editor {
-  font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
-  font-size: 14px;
-}
-
-.html-editor .el-textarea__inner {
-  font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
-  font-size: 14px;
-  line-height: 1.5;
-  min-height: 60vh !important;
-  resize: none;
-}
-
-.dialog-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .product-detail {
-    padding: 15px;
-  }
-  
-  .product-ids {
-    flex-direction: column;
-    gap: 10px;
-  }
-  
-  .id-value-container {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-  
-  .id-actions {
-    justify-content: flex-start;
-  }
-  
-  .title-cn {
-    font-size: 24px;
-  }
-  
-  .title-en {
-    font-size: 18px;
-  }
-  
-  .title-en-container {
-    flex-direction: column;
-    gap: 10px;
-  }
-  
-  .title-actions {
-    justify-content: center;
-  }
-  
-  .section-title {
-    font-size: 20px;
-  }
-  
-  .main-image-item {
-    width: 250px;
-    height: 250px;
-  }
-  
-  .sku-item {
-    width: 180px;
-  }
-  
-  .detail-image-item {
-    width: 200px;
-    height: 200px;
-  }
-}
-
-@media (max-width: 480px) {
-  .main-image-item {
-    width: 200px;
-    height: 200px;
-  }
-  
-  .sku-item {
-    width: 160px;
-  }
-  
-  .detail-image-item {
-    width: 180px;
-    height: 180px;
-  }
-}
-</style>

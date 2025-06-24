@@ -1,4 +1,5 @@
 import './style.css'
+import 'uno.css'
 import router from './router'
 import { createApp } from 'vue'
 import ElementPlus from 'element-plus'
@@ -13,4 +14,6 @@ app.use(ElementPlus, {
 })
 app.mount('#app')
 window.lx_host = window.localStorage.getItem("lx_host")
+window.lx_doubao = window.localStorage.getItem("lx_doubao")
 console.log("window.lx_host",window.lx_host)
+console.log("window.lx_doubao",window.lx_doubao)

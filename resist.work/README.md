@@ -1,82 +1,20 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-删除HTML文件中所有title属性的脚本
-"""
+curl https://ark.cn-beijing.volces.com/api/v3/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer API-Key" \
+  -d $'{
+    "model": "doubao-seed-1-6-250615",
+    "messages": [
+        {
+            "content": [
+                {
+                    "text": "请将下面的代码中的中文翻译成英文(翻译后按原代码格式返回)：<p>商品参数</p>",
+                    "type": "text"
+                }
+            ],
+            "role": "user"
+        }
+    ]
+}'
 
-import re
-import os
-
-def remove_title_attributes(file_path):
-    """
-    删除HTML文件中所有的title属性
-    
-    Args:
-        file_path (str): HTML文件路径
-    
-    Returns:
-        bool: 操作是否成功
-    """
-    try:
-        # 检查文件是否存在
-        if not os.path.exists(file_path):
-            print(f"错误：文件 {file_path} 不存在")
-            return False
-        
-        # 读取文件内容
-        with open(file_path, 'r', encoding='utf-8') as file:
-            content = file.read()
-        
-        print(f"正在处理文件: {file_path}")
-        print(f"原始文件大小: {len(content)} 字符")
-        
-        # 使用正则表达式匹配所有title属性
-        # 匹配模式：title="任何内容"（包括转义字符）
-        title_pattern = r'\s+title="[^"]*"'
-        
-        # 查找所有匹配的title属性
-        matches = re.findall(title_pattern, content)
-        print(f"找到 {len(matches)} 个title属性:")
-        
-        # 显示找到的title属性
-        for i, match in enumerate(matches, 1):
-            print(f"  {i}. {match.strip()}")
-        
-        # 删除所有title属性
-        new_content = re.sub(title_pattern, '', content)
-        
-        print(f"处理后文件大小: {len(new_content)} 字符")
-        print(f"删除了 {len(content) - len(new_content)} 个字符")
-        
-        # 写入修改后的内容
-        with open(file_path, 'w', encoding='utf-8') as file:
-            file.write(new_content)
-        
-        print(f"✅ 成功删除所有title属性并保存文件")
-        return True
-        
-    except Exception as e:
-        print(f"❌ 处理文件时出错: {str(e)}")
-        return False
-
-def main():
-    """
-    主函数
-    """
-    # 目标文件路径
-    html_file = "/Users/lixiang/Desktop/uploadToCF/demo.html"
-    
-    print("=" * 50)
-    print("HTML Title属性删除工具")
-    print("=" * 50)
-    
-    # 执行删除操作
-    success = remove_title_attributes(html_file)
-    
-    if success:
-        print("\n🎉 操作完成！所有title属性已被删除。")
-    else:
-        print("\n❌ 操作失败，请检查错误信息。")
-
-if __name__ == "__main__":
-    main()
+接口返回如下：
+{"choices":[{"finish_reason":"stop","index":0,"logprobs":null,"message":{"content":"\u003cp\u003eProduct Specifications\u003c/p\u003e","reasoning_content":"\n用户让我把代码中的中文“商品参数”翻译成英文。首先，我需要确认这个短语在网页或电商语境中的常用表达。“商品”通常是“product”，“参数”在这里应该是指规格、详细信息，常用“specifications”或者“specs”。不过“specifications”更正式一些，适合用在标题里。所以“商品参数”翻译成“Product Specifications”比较合适。然后，原来的代码是\u003cp\u003e商品参数\u003c/p\u003e，所以替换后的应该是\u003cp\u003eProduct Specifications\u003c/p\u003e。需要确保只替换中文部分，保留HTML标签不变。检查一下，没有其他需要注意的地方，应该就是这样了。","role":"assistant"}}],"created":1750762818,"id":"021750762813358f25149d267da02f550d0000dce333d6986c337","model":"doubao-seed-1-6-250615","service_tier":"default","object":"chat.completion","usage":{"completion_tokens":153,"prompt_tokens":102,"total_tokens":255,"prompt_tokens_details":{"cached_tokens":0},"completion_tokens_details":{"reasoning_tokens":146}}}
