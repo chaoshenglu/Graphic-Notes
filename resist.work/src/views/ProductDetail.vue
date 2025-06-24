@@ -156,6 +156,16 @@
     </div>
     <div class="param-section">
       <div v-html="productData?.param_info_cn || '<p>暂无参数信息</p>'"></div>
+      <div class="param-edit-container">
+        <el-button 
+          type="primary" 
+          :icon="Edit" 
+          @click="editParamHtml"
+          class="edit-html-btn"
+        >
+          编辑HTML
+        </el-button>
+      </div>
     </div>
     
     <!-- SKU编辑弹窗 -->
@@ -183,6 +193,30 @@
         />
       </div>
     </el-dialog>
+    
+    <!-- HTML编辑弹窗 -->
+    <el-dialog
+      v-model="showHtmlEditModal"
+      title="编辑参数信息HTML"
+      width="70%"
+      :center="true"
+      class="html-edit-dialog"
+    >
+      <el-input
+        v-model="editingHtmlContent"
+        type="textarea"
+        placeholder="请输入HTML内容"
+        class="html-editor"
+        :autosize="{ minRows: 25, maxRows: 35 }"
+      />
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="showHtmlEditModal = false">取消</el-button>
+          <el-button type="warning" @click="cleanTitleAttributes">清理</el-button>
+          <el-button type="primary" @click="saveParamHtml" :loading="savingHtml">保存</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -193,6 +227,7 @@ import axios from 'axios'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import { Edit, CopyDocument, ZoomIn, Delete, Download } from '@element-plus/icons-vue'
 import SkuEditModal from '../components/SkuEditModal.vue'
+import { convertToWebP } from '../utils/imageConverter.js'
 const route = useRoute()
 const productData = ref(null)
 const loading = ref(false)
@@ -207,6 +242,11 @@ const currentSkuIndex = ref(-1)
 // 图片预览相关状态
 const showImagePreview = ref(false)
 const previewImageUrl = ref('')
+
+// HTML编辑相关状态
+const showHtmlEditModal = ref(false)
+const editingHtmlContent = ref('')
+const savingHtml = ref(false)
 
 // 获取产品详情
 const fetchProductDetail = async (productId) => {
@@ -275,6 +315,68 @@ const updateProductTitle = async (newTitleEn) => {
     ElMessage.success('英文标题更新成功')
   } catch (error) {
     ElMessage.error('更新失败：' + (error.response?.data?.message || error.message))
+  }
+}
+
+// 编辑参数HTML
+const editParamHtml = () => {
+  editingHtmlContent.value = productData.value?.param_info_cn || ''
+  showHtmlEditModal.value = true
+}
+
+// 保存参数HTML
+const saveParamHtml = async () => {
+  try {
+    savingHtml.value = true
+    const productId = route.params.id
+    const updateData = {
+      ...productData.value,
+      param_info_cn: editingHtmlContent.value
+    }
+    
+    await axios.put(`${window.lx_host}/products/${productId}`, updateData)
+    
+    // 更新本地数据
+    productData.value.param_info_cn = editingHtmlContent.value
+    showHtmlEditModal.value = false
+    ElMessage.success('参数信息更新成功')
+  } catch (error) {
+    ElMessage.error('更新失败：' + (error.response?.data?.message || error.message))
+  } finally {
+    savingHtml.value = false
+  }
+}
+
+// 清理HTML中的title属性
+const cleanTitleAttributes = () => {
+  try {
+    const content = editingHtmlContent.value
+    if (!content) {
+      ElMessage.warning('暂无内容可清理')
+      return
+    }
+    
+    // 使用正则表达式匹配所有title属性
+    // 匹配模式：title="任何内容"（包括转义字符）
+    const titlePattern = /\s+title="[^"]*"/g
+    
+    // 查找所有匹配的title属性
+    const matches = content.match(titlePattern)
+    
+    if (!matches || matches.length === 0) {
+      ElMessage.info('未找到title属性')
+      return
+    }
+    
+    // 删除所有title属性
+    const newContent = content.replace(titlePattern, '')
+    
+    // 更新编辑内容
+    editingHtmlContent.value = newContent
+    
+    ElMessage.success(`成功清理了 ${matches.length} 个title属性`)
+  } catch (error) {
+    ElMessage.error('清理失败：' + error.message)
   }
 }
 
@@ -478,6 +580,8 @@ const downloadAllSkuImages = async () => {
   }
 }
 
+
+
 // 同步图片到Cloudflare
 const syncImagesToCloudflare = async () => {
   const detailImages = productData.value?.detail_images_cn
@@ -488,7 +592,7 @@ const syncImagesToCloudflare = async () => {
   
   try {
     uploading.value = true
-    ElMessage.info(`开始同步 ${detailImages.length} 张详情图片到Cloudflare，请稍候...`)
+    ElMessage.info(`开始同步 ${detailImages.length} 张详情图片到Cloudflare（使用Squoosh转换为WebP格式），请稍候...`)
     
     const uploadedUrls = []
     
@@ -504,12 +608,16 @@ const syncImagesToCloudflare = async () => {
         
         const blob = await response.blob()
         
+        // 使用Squoosh转换为WebP格式
+        ElMessage.info(`正在使用Squoosh转换第 ${i + 1} 张图片为WebP格式...`)
+        const webpBlob = await convertToWebP(blob)
+        
         // 创建FormData
         const formData = new FormData()
-        const filename = `detail_image_${Date.now()}_${i + 1}.jpg`
+        const filename = `${productData.value.product_id}/detail/${i + 1}.webp`
         
         // 创建File对象
-        const file = new File([blob], filename, { type: blob.type || 'image/jpeg' })
+        const file = new File([webpBlob], filename, { type: 'image/webp' })
         formData.append('file', file)
         
         // 上传到Cloudflare R2
@@ -521,7 +629,7 @@ const syncImagesToCloudflare = async () => {
         
         if (uploadResponse.data.success) {
           uploadedUrls.push(uploadResponse.data.url)
-          ElMessage.success(`第 ${i + 1} 张图片上传成功`)
+          ElMessage.success(`第 ${i + 1} 张图片已通过Squoosh转换为WebP格式并上传成功`)
         } else {
           throw new Error(uploadResponse.data.message || '上传失败')
         }
@@ -538,8 +646,8 @@ const syncImagesToCloudflare = async () => {
     }
     
     if (uploadedUrls.length > 0) {
-      ElMessage.success(`成功同步 ${uploadedUrls.length} 张图片到Cloudflare R2`)
-      console.log('上传成功的图片URLs:', uploadedUrls)
+      ElMessage.success(`成功使用Squoosh将 ${uploadedUrls.length} 张图片转换为WebP格式并同步到Cloudflare R2`)
+      console.log('通过Squoosh转换并上传成功的WebP图片URLs:', uploadedUrls)
     } else {
       ElMessage.error('没有图片上传成功')
     }
@@ -991,6 +1099,61 @@ onMounted(() => {
   background: #f8f9fa;
   border-radius: 8px;
   border: 2px dashed #dee2e6;
+}
+
+/* Param Section */
+.param-section {
+  margin-bottom: 40px;
+}
+
+.param-edit-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e9ecef;
+}
+
+.edit-html-btn {
+  transition: all 0.3s ease;
+}
+
+.edit-html-btn:hover {
+  transform: scale(1.05);
+}
+
+/* HTML Edit Dialog */
+.html-edit-dialog .el-dialog {
+  margin-top: 5vh !important;
+  margin-bottom: 5vh !important;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.html-edit-dialog .el-dialog__body {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.html-editor {
+  font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+  font-size: 14px;
+}
+
+.html-editor .el-textarea__inner {
+  font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 60vh !important;
+  resize: none;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
 }
 
 /* Responsive Design */

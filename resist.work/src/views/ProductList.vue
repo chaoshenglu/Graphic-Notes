@@ -145,8 +145,13 @@ const viewDetail = (row) => {
   })
 }
 
-// 删除产品（功能留空）
+// 删除产品 (DELETE /products/:id)
 const deleteProduct = (row) => {
+  if (!row.product_id) {
+    ElMessage.error('产品ID不存在，无法删除')
+    return
+  }
+  
   ElMessageBox.confirm(
     `确定要删除产品 "${row.title_cn}" 吗？`,
     '确认删除',
@@ -155,9 +160,32 @@ const deleteProduct = (row) => {
       cancelButtonText: '取消',
       type: 'warning',
     }
-  ).then(() => {
-    ElMessage.info(`删除产品: ${row.title_cn}`)
-    // TODO: 实现删除功能
+  ).then(async () => {
+    try {
+      loading.value = true
+      const response = await axios.delete(`${window.lx_host}/products/${row.product_id}`)
+      
+      if (response.data.success) {
+        ElMessage.success('产品删除成功')
+        // 如果当前页只有一条数据且不是第一页，则跳转到上一页
+        if (productList.value.length === 1 && currentPage.value > 1) {
+          currentPage.value--
+        }
+        // 重新获取产品列表
+        await fetchProductList()
+      } else {
+        ElMessage.error(response.data.message || '删除失败')
+      }
+    } catch (error) {
+      console.error('删除产品错误:', error)
+      if (error.response && error.response.status === 404) {
+        ElMessage.error('产品不存在或已被删除')
+      } else {
+        ElMessage.error('删除失败，请稍后重试')
+      }
+    } finally {
+      loading.value = false
+    }
   }).catch(() => {
     ElMessage.info('已取消删除')
   })
