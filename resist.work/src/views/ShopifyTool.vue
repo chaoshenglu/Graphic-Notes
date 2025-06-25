@@ -192,18 +192,7 @@ const paginatedProducts = computed(() => {
 const fetchProducts = async () => {
   loading.value = true
   try {
-    // 这里应该调用真实的 Shopify API
-    // 示例代码：
-    // const response = await shopifyApi.rest.Product.all({
-    //   session,
-    //   limit: pageSize.value,
-    //   page: currentPage.value
-    // })
-    // products.value = response.data
-    
-    // 模拟 API 延迟
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
+    // 这里应该调用“获取产品列表”API接口
     products.value = paginatedProducts.value
     totalProducts.value = filteredProducts.value.length
     
