@@ -1,0 +1,18 @@
+{
+  "name": "tmall-data-collect",
+  "version": "1.0.0",
+  "description": "天猫数据采集Chrome扩展",
+  "scripts": {
+    "dev": "vite build --watch",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "axios": "^1.10.0",
+    "vue": "^3.3.4"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^4.2.3",
+    "vite": "^4.4.5"
+  }
+}
