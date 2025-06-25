@@ -60,8 +60,8 @@
               <div class="font-medium text-gray-900 truncate" :title="row.title">
                 {{ row.title }}
               </div>
-              <div class="text-sm text-gray-500 mt-1" v-if="row.vendor">
-                品牌: {{ row.vendor }}
+              <div class="text-sm text-gray-500 mt-1" v-if="row.id">
+                ID: {{ row.id }}
               </div>
             </template>
           </el-table-column>
