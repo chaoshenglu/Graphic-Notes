@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@jsquash/webp": "^1.4.0",
+    "@shopify/shopify-api": "^11.13.0",
     "axios": "^1.10.0",
     "element-plus": "^2.10.2",
     "vue": "^3.5.13",
