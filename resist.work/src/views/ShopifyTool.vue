@@ -41,9 +41,7 @@
           element-loading-text="正在加载商品数据..."
           class="w-full"
           :header-cell-style="{ backgroundColor: '#f8fafc', color: '#374151', fontWeight: '600' }"
-        >
-          <el-table-column type="index" label="序号" width="80" align="center" />
-          
+        >          
           <el-table-column label="商品图片" width="120" align="center">
             <template #default="{ row }">
               <div class="flex justify-center">
