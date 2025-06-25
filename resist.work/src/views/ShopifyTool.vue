@@ -60,8 +60,18 @@
               <div class="font-medium text-gray-900 truncate" :title="row.title">
                 {{ row.title }}
               </div>
-              <div class="text-sm text-gray-500 mt-1" v-if="row.id">
-                ID: {{ row.id }}
+              <div class="text-sm text-gray-500 mt-1 flex items-center" v-if="row.id">
+                <span>ID: {{ row.id }}</span>
+                <el-button
+                  type="primary"
+                  size="small"
+                  text
+                  @click="copyToClipboard(row.id)"
+                  class="ml-2 p-1"
+                  :title="`复制商品ID: ${row.id}`"
+                >
+                  <i class="i-carbon-copy text-xs"></i>
+                </el-button>
               </div>
             </template>
           </el-table-column>
@@ -332,6 +342,27 @@ const viewProduct = (product) => {
 const editProduct = (product) => {
   ElMessage.info(`编辑商品: ${product.title}`)
   // 这里可以跳转到编辑页面或打开编辑弹窗
+}
+
+const copyToClipboard = async (text) => {
+  try {
+    await navigator.clipboard.writeText(text)
+    ElMessage.success(`商品ID已复制到剪贴板: ${text}`)
+  } catch (error) {
+    console.error('复制失败:', error)
+    // 降级方案：使用传统的复制方法
+    const textArea = document.createElement('textarea')
+    textArea.value = text
+    document.body.appendChild(textArea)
+    textArea.select()
+    try {
+      document.execCommand('copy')
+      ElMessage.success(`商品ID已复制到剪贴板: ${text}`)
+    } catch (fallbackError) {
+      ElMessage.error('复制失败，请手动复制')
+    }
+    document.body.removeChild(textArea)
+  }
 }
 
 // 生命周期
