@@ -353,7 +353,7 @@ const editEnglishParamHtml = () => {
 
 // 翻译HTML
 const translateParamHtml = async () => {
-  const paramInfoCn = productData.value?.param_info_cn
+  let paramInfoCn = productData.value?.param_info_cn
   if (!paramInfoCn || paramInfoCn.trim() === '') {
     ElMessage.warning('暂无中文参数信息可翻译')
     return
@@ -361,6 +361,14 @@ const translateParamHtml = async () => {
 
   try {
     ElMessage.info('正在翻译参数信息，请稍候...')
+
+    // 删除<style>...</style>部分
+    const cleanedParamInfoCn = paramInfoCn.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+    
+    if (!cleanedParamInfoCn || cleanedParamInfoCn.trim() === '') {
+      ElMessage.warning('删除样式后暂无内容可翻译')
+      return
+    }
 
     // 调用豆包API进行翻译
     const response = await fetch('https://ark.cn-beijing.volces.com/api/v3/chat/completions', {
@@ -375,7 +383,7 @@ const translateParamHtml = async () => {
           {
             content: [
               {
-                text: `请将下面的代码中的中文翻译成英文(翻译后按原代码格式返回)：${paramInfoCn}`,
+                text: `请将下面的代码中的中文翻译成英文(翻译后按原代码格式返回)：${cleanedParamInfoCn}`,
                 type: 'text'
               }
             ],
