@@ -8,7 +8,7 @@
       </h1>
       <div class="flex items-center justify-center gap-4 flex-wrap">
         <h2 class="text-xl font-normal text-gray-600 m-0 leading-relaxed">{{ productData?.title_en || 'No English Title'
-          }}</h2>
+        }}</h2>
         <div class="flex gap-2 items-center">
           <el-button type="primary" :icon="Edit" size="small" circle @click="editTitleEn" title="编辑英文标题"
             class="transition-transform duration-300 hover:scale-110" />
@@ -206,8 +206,16 @@ const editingLanguage = ref('cn') // 'cn' 表示编辑中文，'en' 表示编辑
 
 // 同步一些商品属性到Shopify
 function synchronizeProductInfoToShopify() {
+  let param_info_en = productData.value.param_info_en || "<p></p>"
+  let param_info_cn = productData.value.param_info_cn || "<p></p>"
+  let param = {
+    "title": productData.value.title_en || '',
+    "product_type": productData.value.cate || '',
+    "vendor": "Hauty",
+    "body_html": param_info_en + param_info_cn
+  }
   /*
-  PUT /api/products/14695990591853
+  PUT http://localhost:3000/api/products/14695990591853
 Content-Type: application/json
 
 {
