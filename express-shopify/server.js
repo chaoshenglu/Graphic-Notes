@@ -2,6 +2,8 @@ import '@shopify/shopify-api/adapters/node';
 import { shopifyApi, LATEST_API_VERSION } from '@shopify/shopify-api';
 import express from 'express';
 import dotenv from 'dotenv';
+import { HttpsProxyAgent } from 'https-proxy-agent';
+import fetch from 'node-fetch';
 import { validateShopifyConfig, createShopifySession, validateSession } from './middleware/auth.js';
 import Logger, { requestLogger, errorLogger } from './middleware/logger.js';
 import { rateLimitAPI } from './middleware/rateLimit.js';
@@ -9,6 +11,16 @@ import { validateProductsQuery, validateProductId } from './middleware/validatio
 
 // 加载环境变量
 dotenv.config();
+
+// 配置代理
+const proxyUrl = process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
+const agent = proxyUrl ? new HttpsProxyAgent(proxyUrl) : undefined;
+
+if (proxyUrl) {
+  Logger.info(`使用代理服务器: ${proxyUrl}`);
+} else {
+  Logger.info('未配置代理服务器');
+}
 
 // 初始化Shopify API
 const shopify = shopifyApi({
@@ -57,6 +69,7 @@ app.get('/', (req, res) => {
     endpoints: {
       products: '/api/products - 获取产品列表（支持分页）',
       productDetail: '/api/products/:id - 获取产品详情',
+      testProxy: '/api/test-proxy - 测试代理连接',
       health: '/health - 健康检查'
     },
     features: [
@@ -64,9 +77,102 @@ app.get('/', (req, res) => {
       '速率限制保护',
       '详细日志记录',
       '完善错误处理',
-      'CORS支持'
+      'CORS支持',
+      '代理连接测试'
     ]
   });
+});
+
+// 代理测试端点
+app.get('/api/test-proxy', async (req, res) => {
+  try {
+    Logger.info('开始测试代理连接');
+    
+    const testUrls = [
+      'https://www.google.com',
+      'https://api.github.com',
+      'https://httpbin.org/ip'
+    ];
+    
+    const results = [];
+    
+    for (const url of testUrls) {
+      try {
+        const startTime = Date.now();
+        
+        // 使用node-fetch进行测试，支持代理配置
+        const fetchOptions = {
+          method: 'GET',
+          timeout: 10000, // 10秒超时
+          headers: {
+            'User-Agent': 'Express-Shopify-Proxy-Test/1.0'
+          }
+        };
+        
+        // 如果配置了代理，添加代理设置
+        if (agent) {
+          fetchOptions.agent = agent;
+        }
+        
+        const response = await fetch(url, fetchOptions);
+        const endTime = Date.now();
+        const responseTime = endTime - startTime;
+        
+        results.push({
+          url,
+          status: 'success',
+          statusCode: response.status,
+          responseTime: `${responseTime}ms`,
+          proxyUsed: !!agent,
+          proxyUrl: agent ? proxyUrl : null
+        });
+        
+        Logger.info(`代理测试成功: ${url} - ${response.status} (${responseTime}ms)`);
+        
+      } catch (error) {
+        results.push({
+          url,
+          status: 'failed',
+          error: error.message,
+          proxyUsed: !!agent,
+          proxyUrl: agent ? proxyUrl : null
+        });
+        
+        Logger.warn(`代理测试失败: ${url} - ${error.message}`);
+      }
+    }
+    
+    const successCount = results.filter(r => r.status === 'success').length;
+    const totalCount = results.length;
+    
+    res.json({
+      success: true,
+      data: {
+        proxyConfigured: !!agent,
+        proxyUrl: agent ? proxyUrl : null,
+        testResults: results,
+        summary: {
+          total: totalCount,
+          success: successCount,
+          failed: totalCount - successCount,
+          successRate: `${Math.round((successCount / totalCount) * 100)}%`
+        }
+      },
+      message: agent 
+        ? `代理测试完成，成功率: ${Math.round((successCount / totalCount) * 100)}%` 
+        : `直连测试完成，成功率: ${Math.round((successCount / totalCount) * 100)}%`
+    });
+    
+  } catch (error) {
+    Logger.error('代理测试失败', error);
+    res.status(500).json({
+      success: false,
+      error: '代理测试失败',
+      details: error.message,
+      proxyConfigured: !!agent,
+      proxyUrl: agent ? proxyUrl : null
+    });
+  }
 });
 
 // 健康检查端点
@@ -122,7 +228,10 @@ app.get('/api/products', validateProductsQuery, async (req, res) => {
     }
 
     // 调用Shopify API获取产品
-    const client = new shopify.clients.Rest({ session });
+    const client = new shopify.clients.Rest({ 
+      session,
+      ...(agent && { httpAgent: agent, httpsAgent: agent })
+    });
     const products = await client.get({
       path: 'products',
       query: queryParams
@@ -199,7 +308,10 @@ app.get('/api/products/:id', validateProductId, async (req, res) => {
     const session = createShopifySession();
     validateSession(session);
 
-    const client = new shopify.clients.Rest({ session });
+    const client = new shopify.clients.Rest({ 
+      session,
+      ...(agent && { httpAgent: agent, httpsAgent: agent })
+    });
     const product = await client.get({
       path: `products/${productId}`
     });
@@ -267,28 +379,8 @@ app.use('*', (req, res) => {
 app.listen(PORT, () => {
   Logger.info(`🚀 Express Shopify API 服务器启动成功`);
   Logger.info(`📍 服务地址: http://localhost:${PORT}`);
-  Logger.info(`🌍 运行环境: ${process.env.NODE_ENV || 'development'}`);
   Logger.info(`📚 API文档:`);
   Logger.info(`   GET /api/products - 获取产品列表（支持分页）`);
   Logger.info(`   GET /api/products/:id - 获取产品详情`);
-  Logger.info(`📋 分页参数:`);
-  Logger.info(`   limit: 每页数量 (1-250, 默认50)`);
-  Logger.info(`   page_info: 分页游标`);
-  Logger.info(`   since_id: 从指定ID开始获取`);
-  Logger.info(`🔧 功能特性:`);
-  Logger.info(`   ✅ 输入参数验证`);
-  Logger.info(`   ✅ 速率限制保护`);
-  Logger.info(`   ✅ 详细日志记录`);
-  Logger.info(`   ✅ 完善错误处理`);
-  
-  // 环境配置检查
-  const requiredEnvVars = ['SHOPIFY_API_KEY', 'SHOPIFY_API_SECRET', 'SHOPIFY_SHOP_DOMAIN', 'SHOPIFY_ACCESS_TOKEN'];
-  const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
-  
-  if (missingVars.length > 0) {
-    Logger.warn(`⚠️  缺少环境变量: ${missingVars.join(', ')}`);
-    Logger.warn(`请确保.env文件包含所有必需的Shopify配置`);
-  } else {
-    Logger.info(`✅ Shopify配置检查通过`);
-  }
+  Logger.info(`   GET /api/test-proxy - 测试代理连接`);
 });
