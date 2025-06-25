@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Download Tmall</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>天猫下载助手</h1>
+    </div>
+    
+    <div class="content">
+      <div class="status" id="status">
+        <p>请在天猫页面使用此扩展</p>
+      </div>
+      
+      <div class="actions">
+        <button id="downloadMainImagesBtn" class="btn btn-primary" disabled>
+          下载主图
+        </button>
+        <button id="downloadBtn" class="btn btn-primary" disabled>
+          下载详情页
+        </button>
+        <button id="downloadProductParameters" class="btn btn-primary" disabled>
+          下载产品参数
+        </button>
+      </div>
+      
+      <div class="progress" id="progress" style="display: none;">
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-text" id="progressText">0%</div>
+      </div>
+    </div>
+    
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
