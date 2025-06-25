@@ -7,7 +7,7 @@ import fetch from 'node-fetch';
 import { validateShopifyConfig, createShopifySession, validateSession } from './middleware/auth.js';
 import Logger, { requestLogger, errorLogger } from './middleware/logger.js';
 import { rateLimitAPI } from './middleware/rateLimit.js';
-import { validateProductsQuery, validateProductId } from './middleware/validation.js';
+import { validateProductsQuery, validateProductId, validateRequestBody } from './middleware/validation.js';
 
 // 加载环境变量
 dotenv.config();
@@ -26,7 +26,7 @@ if (proxyUrl) {
 const shopify = shopifyApi({
   apiKey: process.env.SHOPIFY_API_KEY || 'APIKeyFromPartnersDashboard',
   apiSecretKey: process.env.SHOPIFY_API_SECRET || 'APISecretFromPartnersDashboard',
-  scopes: ['read_products'],
+  scopes: ['read_products', 'write_products'],
   hostName: process.env.HOST_NAME || 'ngrok-tunnel-address',
   apiVersion: LATEST_API_VERSION,
   isEmbeddedApp: false,
@@ -69,6 +69,7 @@ app.get('/', (req, res) => {
     endpoints: {
       products: '/api/products - 获取产品列表（支持分页）',
       productDetail: '/api/products/:id - 获取产品详情',
+      updateProduct: '/api/products/:id - 修改产品信息（PUT）',
       testProxy: '/api/test-proxy - 测试代理连接',
       health: '/health - 健康检查'
     },
@@ -354,6 +355,113 @@ app.get('/api/products/:id', validateProductId, async (req, res) => {
   }
 });
 
+// 修改产品信息
+app.put('/api/products/:id', 
+  validateProductId,
+  validateRequestBody({
+    title: { type: 'string', maxLength: 255 },
+    product_type: { type: 'string', maxLength: 255 },
+    vendor: { type: 'string', maxLength: 255 },
+    body_html: { type: 'string', maxLength: 65535 }
+  }),
+  async (req, res) => {
+    try {
+      const { id: productId } = req.validatedParams;
+      const { title, product_type, vendor, body_html } = req.body;
+      
+      // 检查是否至少提供了一个要更新的字段
+      if (!title && !product_type && !vendor && body_html === undefined) {
+        return res.status(400).json({
+          success: false,
+          error: '请求参数错误',
+          message: '至少需要提供一个要更新的字段（title, product_type, vendor, body_html）'
+        });
+      }
+      
+      Logger.info('修改产品信息请求', { productId, fields: Object.keys(req.body) });
+      
+      const session = createShopifySession();
+      validateSession(session);
+
+      // 构建更新数据
+      const updateData = { product: {} };
+      if (title !== undefined) updateData.product.title = title;
+      if (product_type !== undefined) updateData.product.product_type = product_type;
+      if (vendor !== undefined) updateData.product.vendor = vendor;
+      if (body_html !== undefined) updateData.product.body_html = body_html;
+
+      const client = new shopify.clients.Rest({ 
+        session,
+        ...(agent && { httpAgent: agent, httpsAgent: agent })
+      });
+      
+      const updatedProduct = await client.put({
+        path: `products/${productId}`,
+        data: updateData
+      });
+
+      const productData = updatedProduct.body?.product || updatedProduct.body;
+      
+      res.json({
+        success: true,
+        data: productData,
+        message: '产品信息修改成功'
+      });
+      
+      Logger.info('产品信息修改成功', { 
+        productId, 
+        title: productData?.title,
+        updatedFields: Object.keys(req.body)
+      });
+
+    } catch (error) {
+      Logger.error('修改产品信息失败', error);
+      
+      if (error.message.includes('Not Found') || error.message.includes('404')) {
+        return res.status(404).json({
+          success: false,
+          error: '产品未找到',
+          details: error.message,
+          hint: `产品ID ${req.validatedParams.id} 不存在或已被删除`
+        });
+      }
+      
+      if (error.message.includes('Unauthorized') || error.message.includes('401')) {
+        return res.status(401).json({
+          success: false,
+          error: '未授权访问，请检查API密钥和访问令牌',
+          details: error.message,
+          hint: '修改产品需要write_products权限'
+        });
+      }
+      
+      if (error.message.includes('Forbidden') || error.message.includes('403')) {
+        return res.status(403).json({
+          success: false,
+          error: '权限不足',
+          details: error.message,
+          hint: '当前API密钥没有修改产品的权限，请检查Shopify应用权限配置'
+        });
+      }
+      
+      if (error.message.includes('Unprocessable Entity') || error.message.includes('422')) {
+        return res.status(422).json({
+          success: false,
+          error: '数据验证失败',
+          details: error.message,
+          hint: '请检查提交的产品数据格式是否正确'
+        });
+      }
+
+      res.status(500).json({
+        success: false,
+        error: '服务器内部错误',
+        details: process.env.NODE_ENV === 'development' ? error.message : '请联系管理员'
+      });
+    }
+  }
+);
+
 // 错误处理中间件
 app.use(errorLogger);
 app.use((err, req, res, next) => {
@@ -382,5 +490,6 @@ app.listen(PORT, () => {
   Logger.info(`📚 API文档:`);
   Logger.info(`   GET /api/products - 获取产品列表（支持分页）`);
   Logger.info(`   GET /api/products/:id - 获取产品详情`);
+  Logger.info(`   PUT /api/products/:id - 修改产品信息`);
   Logger.info(`   GET /api/test-proxy - 测试代理连接`);
 });
