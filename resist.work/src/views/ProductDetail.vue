@@ -205,26 +205,48 @@ const savingHtml = ref(false)
 const editingLanguage = ref('cn') // 'cn' 表示编辑中文，'en' 表示编辑英文
 
 // 同步一些商品属性到Shopify
-function synchronizeProductInfoToShopify() {
-  let param_info_en = productData.value.param_info_en || "<p></p>"
-  let param_info_cn = productData.value.param_info_cn || "<p></p>"
-  let param = {
-    "title": productData.value.title_en || '',
-    "product_type": productData.value.cate || '',
-    "vendor": "Hauty",
-    "body_html": param_info_en + param_info_cn
+const synchronizeProductInfoToShopify = async () => {
+  if (!productData.value?.shopify_id) {
+    ElMessage.error('缺少Shopify ID，无法同步')
+    return
   }
-  /*
-  PUT http://localhost:3000/api/products/14695990591853
-Content-Type: application/json
 
-{
-  "title": "Updated Roman Column Lamp",
-  "product_type": "Table Lamp",
-  "vendor": "New Vendor",
-  "body_html": "<p>Updated product description</p>"
-}
-  */
+  try {
+    ElMessage.info('正在同步商品信息到Shopify，请稍候...')
+    
+    const param_info_en = productData.value.param_info_en || "<p></p>"
+    const param_info_cn = productData.value.param_info_cn || "<p></p>"
+    
+    const updateData = {
+      "title": productData.value.title_en || '',
+      "product_type": productData.value.cate || '',
+      "vendor": "Hauty",
+      "body_html": param_info_en + param_info_cn
+    }
+
+    // 调用后端API同步到Shopify
+    const response = await axios.put(
+      `${window.lx_host}/api/shopify/products/${productData.value.shopify_id}`,
+      updateData,
+      {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    )
+
+    if (response.data.success) {
+      ElMessage.success('商品信息已成功同步到Shopify')
+      console.log('Shopify同步成功:', response.data)
+    } else {
+      throw new Error(response.data.message || '同步失败')
+    }
+
+  } catch (error) {
+    console.error('同步到Shopify失败:', error)
+    const errorMessage = error.response?.data?.message || error.message || '同步失败'
+    ElMessage.error(`同步到Shopify失败: ${errorMessage}`)
+  }
 }
 
 // 获取产品详情
