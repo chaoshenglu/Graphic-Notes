@@ -66,10 +66,10 @@ const tools = ref([
     description: '为图片添加水印'
   },
   {
-    id: 'qr-decode',
-    name: '二维码解析',
-    icon: '📱',
-    description: '二维码识别解析'
+    id: 'shopify-tool',
+    name: 'Shopify产品管理工具',
+    icon: '🛍️',
+    description: '管理Shopify销售的产品'
   },
   {
     id: 'base64-image',
