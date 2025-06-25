@@ -1,10 +1,7 @@
 <template>
   <div class="max-w-6xl mx-auto p-5 font-sans">
     <div class="flex" style="position: fixed;top:100px;left:0" v-if="productData && productData.shopify_id">
-      <el-button class="ml-5px">同步标题</el-button>
-      <el-button class="ml-5px">同步分类</el-button>
-      <el-button class="ml-5px">同步sku</el-button>
-      <el-button class="ml-5px">同步描述</el-button>
+      <el-button class="ml-5px">同步商品信息到shopify</el-button>
     </div>
     <div class="mb-8 text-center">
       <h1 class="text-3xl font-bold text-gray-800 mb-3 leading-tight">{{ productData?.title_cn || 'No Chinese Title' }}
