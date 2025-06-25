@@ -170,35 +170,113 @@ const currentPage = ref(1)
 const pageSize = ref(20)
 const totalProducts = ref(0)
 
-// 计算属性 - 过滤后的商品
-const filteredProducts = computed(() => {
-  if (!searchQuery.value) {
-    return mockProducts.value
-  }
-  return mockProducts.value.filter(product => 
-    product.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-    product.vendor.toLowerCase().includes(searchQuery.value.toLowerCase())
-  )
+// 分页信息存储
+const paginationInfo = ref({
+  hasNextPage: false,
+  hasPreviousPage: false,
+  nextPageInfo: null,
+  previousPageInfo: null
 })
 
-// 计算属性 - 当前页商品
-const paginatedProducts = computed(() => {
-  const start = (currentPage.value - 1) * pageSize.value
-  const end = start + pageSize.value
-  return filteredProducts.value.slice(start, end)
-})
+// 分页历史记录，用于存储每页的分页信息
+const pageHistory = ref(new Map())
+
+// 注意：由于使用API分页，不再需要客户端的过滤和分页计算属性
+// 搜索和分页都通过API参数处理
 
 const fetchProducts = async () => {
   loading.value = true
   try {
-    // 这里应该调用“获取产品列表”API接口
-    // http://localhost:3000/api/products?limit=10
-    products.value = paginatedProducts.value
-    totalProducts.value = filteredProducts.value.length
+    // 构建API请求参数
+    const params = new URLSearchParams({
+      limit: pageSize.value.toString()
+    })
+    
+    // 如果有搜索查询，添加到参数中（这里假设API支持搜索）
+    if (searchQuery.value) {
+      params.append('search', searchQuery.value)
+    }
+    
+    // 使用分页历史记录进行分页
+    if (currentPage.value > 1) {
+      const pageInfo = pageHistory.value.get(currentPage.value)
+      if (pageInfo) {
+        params.append('page_info', pageInfo)
+      }
+    }
+    
+    // 调用Shopify API
+    const response = await fetch(`http://localhost:3000/api/products?${params.toString()}`)
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    
+    const result = await response.json()
+    
+    if (result.success) {
+      // 处理产品数据，确保图片字段正确
+      const processedProducts = result.data.products.map(product => ({
+        ...product,
+        image: product.images && product.images.length > 0 
+          ? product.images[0].src 
+          : null
+      }))
+      
+      products.value = processedProducts
+      
+      // 更新分页信息
+       if (result.data.pagination) {
+         paginationInfo.value = {
+           hasNextPage: result.data.pagination.hasNextPage || false,
+           hasPreviousPage: result.data.pagination.hasPreviousPage || false,
+           nextPageInfo: result.data.pagination.nextPageInfo || null,
+           previousPageInfo: result.data.pagination.previousPageInfo || null
+         }
+         
+         // 保存下一页的分页信息到历史记录
+         if (result.data.pagination.nextPageInfo) {
+           pageHistory.value.set(currentPage.value + 1, result.data.pagination.nextPageInfo)
+         }
+         
+         // 更新总数
+         if (result.data.pagination.totalCount) {
+           totalProducts.value = result.data.pagination.totalCount
+         } else {
+           // 如果没有总数信息，估算总数
+           totalProducts.value = currentPage.value * pageSize.value + (paginationInfo.value.hasNextPage ? 1 : 0)
+         }
+       } else {
+         // 如果没有分页信息，使用当前返回的数量
+         totalProducts.value = processedProducts.length
+         paginationInfo.value = {
+           hasNextPage: false,
+           hasPreviousPage: false,
+           nextPageInfo: null,
+           previousPageInfo: null
+         }
+       }
+      
+      ElMessage.success(`成功获取 ${processedProducts.length} 个商品`)
+    } else {
+      throw new Error(result.error || '获取商品失败')
+    }
     
   } catch (error) {
     console.error('获取商品失败:', error)
-    ElMessage.error('获取商品数据失败，请检查网络连接')
+    
+    // 根据错误类型显示不同的错误信息
+    if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      ElMessage.error('无法连接到服务器，请确保API服务正在运行 (http://localhost:3000)')
+    } else if (error.message.includes('HTTP error')) {
+      ElMessage.error(`服务器错误: ${error.message}`)
+    } else {
+      ElMessage.error(`获取商品数据失败: ${error.message}`)
+    }
+    
+    // 清空商品列表
+    products.value = []
+    totalProducts.value = 0
   } finally {
     loading.value = false
   }
@@ -206,18 +284,20 @@ const fetchProducts = async () => {
 
 const refreshProducts = () => {
   currentPage.value = 1
+  pageHistory.value.clear() // 清理分页历史记录
   fetchProducts()
 }
 
 const handleSearch = () => {
   currentPage.value = 1
-  products.value = paginatedProducts.value
-  totalProducts.value = filteredProducts.value.length
+  pageHistory.value.clear() // 清理分页历史记录
+  fetchProducts()
 }
 
 const handleSizeChange = (newSize) => {
   pageSize.value = newSize
   currentPage.value = 1
+  pageHistory.value.clear() // 清理分页历史记录
   fetchProducts()
 }
 
