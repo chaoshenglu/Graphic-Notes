@@ -188,7 +188,6 @@ const paginatedProducts = computed(() => {
   return filteredProducts.value.slice(start, end)
 })
 
-// 方法
 const fetchProducts = async () => {
   loading.value = true
   try {
