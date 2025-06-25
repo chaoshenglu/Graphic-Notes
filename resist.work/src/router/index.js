@@ -8,7 +8,7 @@ import ImageConvert from '../views/ImageConvert.vue'
 import ProductList from '../views/ProductList.vue'
 import ProductDetail from '../views/ProductDetail.vue'
 import Watermark from '../views/Watermark.vue'
-import QrDecode from '../views/QrDecode.vue'
+import ShopifyTool from '../views/ShopifyTool.vue'
 import Base64Image from '../views/Base64Image.vue'
 
 const routes = [
@@ -58,9 +58,9 @@ const routes = [
     component: Watermark
   },
   {
-    path: '/qr-decode',
-    name: 'QrDecode',
-    component: QrDecode
+    path: '/shopify-tool',
+    name: 'ShopifyTool',
+    component: ShopifyTool
   },
   {
     path: '/base64-image',
