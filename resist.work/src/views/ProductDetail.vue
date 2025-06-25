@@ -361,7 +361,7 @@ const translateParamHtml = async () => {
 
   try {
     ElMessage.info('正在翻译参数信息，请稍候...')
-
+    paramInfoCn = paramInfoCn.replace(`<p class="section-title">Parameter information</p>`,"")
     // 删除<style>...</style>部分
     const cleanedParamInfoCn = paramInfoCn.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
     
