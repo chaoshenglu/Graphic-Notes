@@ -193,6 +193,7 @@ const fetchProducts = async () => {
   loading.value = true
   try {
     // 这里应该调用“获取产品列表”API接口
+    // http://localhost:3000/api/products?limit=10
     products.value = paginatedProducts.value
     totalProducts.value = filteredProducts.value.length
     
