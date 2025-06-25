@@ -1,5 +1,5 @@
 import { defineConfig } from 'unocss'
-import { presetUno, presetAttributify, presetIcons } from 'unocss'
+import { defineConfig, presetUno, presetAttributify, presetIcons } from 'unocss'
 
 export default defineConfig({
   presets: [
@@ -8,6 +8,9 @@ export default defineConfig({
     presetIcons({
       scale: 1.2,
       warn: true,
+      collections: {
+        carbon: () => import('@iconify-json/carbon/icons.json').then(i => i.default),
+      },
     }),
   ],
   theme: {
