@@ -207,6 +207,21 @@ const editingHtmlContent = ref('')
 const savingHtml = ref(false)
 const editingLanguage = ref('cn') // 'cn' 表示编辑中文，'en' 表示编辑英文
 
+// 同步一些商品属性到Shopify
+function synchronizeProductInfoToShopify() {
+  /*
+  PUT /api/products/14695990591853
+Content-Type: application/json
+
+{
+  "title": "Updated Roman Column Lamp",
+  "product_type": "Table Lamp",
+  "vendor": "New Vendor",
+  "body_html": "<p>Updated product description</p>"
+}
+  */
+}
+
 // 获取产品详情
 const fetchProductDetail = async (productId) => {
   try {
