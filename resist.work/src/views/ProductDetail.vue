@@ -226,7 +226,7 @@ const synchronizeProductInfoToShopify = async () => {
 
     // 调用后端API同步到Shopify
     const response = await axios.put(
-      `${window.lx_host}/api/shopify/products/${productData.value.shopify_id}`,
+      `http://localhost:3000/api/shopify/products/${productData.value.shopify_id}`,
       updateData,
       {
         headers: {
