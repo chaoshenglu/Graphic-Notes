@@ -213,7 +213,7 @@ const synchronizeProductInfoToShopify = async () => {
 
   try {
     ElMessage.info('正在同步商品信息到Shopify，请稍候...')
-    
+    const prefix = `<p class="section-title">Parameter information</p>`
     const param_info_en = productData.value.param_info_en || "<p></p>"
     const param_info_cn = productData.value.param_info_cn || "<p></p>"
     
@@ -221,12 +221,12 @@ const synchronizeProductInfoToShopify = async () => {
       "title": productData.value.title_en || '',
       "product_type": productData.value.cate || '',
       "vendor": "Hauty",
-      "body_html": param_info_en + param_info_cn
+      "body_html": prefix + param_info_en + param_info_cn
     }
 
     // 调用后端API同步到Shopify
     const response = await axios.put(
-      `http://localhost:3000/api/shopify/products/${productData.value.shopify_id}`,
+      `http://localhost:3000/api/products/${productData.value.shopify_id}`,
       updateData,
       {
         headers: {
@@ -361,7 +361,6 @@ const translateParamHtml = async () => {
 
   try {
     ElMessage.info('正在翻译参数信息，请稍候...')
-    paramInfoCn = paramInfoCn.replace(`<p class="section-title">Parameter information</p>`,"")
     // 删除<style>...</style>部分
     const cleanedParamInfoCn = paramInfoCn.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
     

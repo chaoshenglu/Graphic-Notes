@@ -312,7 +312,6 @@ function collectProductParameters() {
         }
     }
 </style>
-<p class="section-title">Parameter information</p>
 ${clonedDiv.outerHTML}`;
 
     return htmlContent;
