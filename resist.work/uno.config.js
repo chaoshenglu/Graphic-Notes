@@ -8,7 +8,7 @@ export default defineConfig({
       scale: 1.2,
       warn: true,
       collections: {
-        carbon: () => import('@iconify-json/carbon/icons.json').then(i => i.default),
+        carbon: () => import('@iconify-json/carbon/icons.json', { with: { type: 'json' } }).then(i => i.default),
       },
     }),
   ],
