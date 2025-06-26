@@ -179,8 +179,8 @@
       </template>
     </el-dialog>
 
-    <el-dialog v-model="showProductHtmlEditModal" title="编辑图片详情页"
-      width="70%" :center="true" class="mt-5vh mb-5vh max-h-90vh flex flex-col">
+    <el-dialog v-model="showProductHtmlEditModal" title="编辑图片详情页" width="70%" :center="true"
+      class="mt-5vh mb-5vh max-h-90vh flex flex-col">
       <el-input v-model="editingProductHtmlContent" type="textarea" placeholder="请输入HTML内容"
         class="font-mono text-sm leading-relaxed" :autosize="{ minRows: 25, maxRows: 35 }" />
       <template #footer>
@@ -237,8 +237,10 @@ function previewProductHtml() {
 
 // 同步一些商品属性到Shopify
 const synchronizeProductInfoToShopify = async () => {
-  const param_info_en = productData.value.param_info_en || ""
-  const param_info_cn = productData.value.param_info_cn || ""
+  let param_info_en = productData.value.param_info_en || ""
+  let param_info_cn = productData.value.param_info_cn || ""
+  param_info_en = param_info_en.replace(`<p class="section-title">Parameter information</p>`, '')
+  param_info_cn = param_info_cn.replace(`<p class="section-title">Parameter information</p>`, '')
   const shopify_id = productData.value.shopify_id || ''
   const product_html = productData.value.product_html || ''
   const title_en = productData.value.title_en || ''
@@ -253,10 +255,6 @@ const synchronizeProductInfoToShopify = async () => {
   }
   if (title_en == '') {
     ElMessage.error('缺少title_en，无法同步')
-    return
-  }
-  if (productData.value.cate == 'Not decided') {
-    ElMessage.error('缺少cate，无法同步')
     return
   }
   if (param_info_en == '') {
@@ -327,7 +325,7 @@ const editTitleEn = async () => {
       {
         confirmButtonText: '确认',
         cancelButtonText: '取消',
-        inputValue: productData.value?.title_en || '',
+        inputValue: productData.value?.title_en || ' Tiffany Lamp',
         inputPlaceholder: '请输入英文标题'
       }
     )
@@ -416,7 +414,7 @@ const translateParamHtml = async () => {
     ElMessage.info('正在翻译参数信息，请稍候...')
     // 删除<style>...</style>部分
     const cleanedParamInfoCn = paramInfoCn.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-    
+
     if (!cleanedParamInfoCn || cleanedParamInfoCn.trim() === '') {
       ElMessage.warning('删除样式后暂无内容可翻译')
       return
@@ -430,7 +428,7 @@ const translateParamHtml = async () => {
         'Authorization': `Bearer ${window.lx_doubao}`
       },
       body: JSON.stringify({
-        model: 'doubao-seed-1-6-250615',
+        model: 'doubao-seed-1-6-flash-250615',
         messages: [
           {
             content: [
@@ -514,32 +512,6 @@ const saveParamHtml = async () => {
   }
 }
 
-// 清理HTML中的title属性
-const cleanTitleAttributes = () => {
-  try {
-    const content = editingHtmlContent.value
-    if (!content) {
-      ElMessage.warning('暂无内容可清理')
-      return
-    }
-    // 匹配模式：title="任何内容"（包括转义字符）
-    const titlePattern = /\s+title="[^"]*"/g
-    const matches = content.match(titlePattern)
-    let newContent = content
-    if (!matches) {
-      console.log('未找到title属性')
-    } else {
-      newContent = content.replace(titlePattern, '')
-    }
-    newContent = newContent.replace("豪蒂（家装灯饰）", "Hauty")
-    newContent = newContent.replace("豪蒂", "Hauty")
-    newContent = newContent.replace("10年", "1年")
-    editingHtmlContent.value = newContent
-  } catch (error) {
-    console.log(error)
-  }
-}
-
 // 编辑Shopify ID
 const editShopifyId = async () => {
   try {
@@ -586,10 +558,7 @@ const updateShopifyId = async (newShopifyId) => {
       ...productData.value,
       shopify_id: newShopifyId
     }
-
     await axios.put(`${window.lx_host}/products/${productId}`, updateData)
-
-    // 更新本地数据
     productData.value.shopify_id = newShopifyId
     ElMessage.success('Shopify ID更新成功')
   } catch (error) {
@@ -621,20 +590,6 @@ const previewImage = (imageUrl) => {
 // 确认删除图片
 const confirmDeleteImage = async (index) => {
   await deleteDetailImage(index)
-  // try {
-  //   await ElMessageBox.confirm(
-  //     '确定要删除这张详情图片吗？',
-  //     '删除确认',
-  //     {
-  //       confirmButtonText: '确认删除',
-  //       cancelButtonText: '取消',
-  //       type: 'warning'
-  //     }
-  //   )
-  //   await deleteDetailImage(index)
-  // } catch (error) {
-  //   // 用户取消操作
-  // }
 }
 
 // 删除详情图片
@@ -660,13 +615,13 @@ const downloadImage = async (imageUrl, filename) => {
   try {
     const response = await fetch(imageUrl)
     const blob = await response.blob()
-    
+
     // 将图片转换为WebP格式
     const webpBlob = await convertToWebP(blob, 95)
-    
+
     // 修改文件名为.webp格式
     const webpFilename = filename.replace(/\.[^.]+$/, '.webp')
-    
+
     const url = window.URL.createObjectURL(webpBlob)
     const link = document.createElement('a')
     link.href = url
@@ -694,7 +649,7 @@ const downloadAllMainImages = async () => {
 
     for (let i = 0; i < mainImages.length; i++) {
       const imageUrl = mainImages[i]
-      const filename = `主图_${i + 1}.jpg`
+      const filename = `${productData.value.product_id}_${i + 1}.jpg`
       await downloadImage(imageUrl, filename)
 
       // 添加延迟避免浏览器阻止多个下载
@@ -747,6 +702,15 @@ const generateDetailImagesHtml = () => {
   for (let i = 1; i <= count; i++) {
     imageUrls.push(`https://tiffanylamps.art/${id}/detail/${i}.webp`)
   }
+  imageUrls.push('https://tiffanylamps.art/bottom.webp')
+  if (productData.value.cate == 'Floor Lamp') {
+    imageUrls.push('https://tiffanylamps.art/floor-lamp-switch.webp')
+  } else if (productData.value.cate == 'Not decided') {
+    imageUrls.push('https://tiffanylamps.art/floor-lamp-switch.webp')
+    imageUrls.push('https://tiffanylamps.art/not-floor-lamp-switch.webp')
+  } else {
+    imageUrls.push('https://tiffanylamps.art/not-floor-lamp-switch.webp')
+  }
   const imgTags = imageUrls.map(url => `  <img src="${url}">`).join('\n')
   return `<div style="display: flex;flex-direction: column;border-radius: 8px;box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);overflow: hidden;">\n${imgTags}\n</div>`
 }
@@ -756,7 +720,7 @@ const updateProductHtml = async () => {
   let new_product_html = ''
   if (showProductHtmlEditModal.value) {
     new_product_html = editingProductHtmlContent.value
-  }else{
+  } else {
     new_product_html = generateDetailImagesHtml()
   }
   try {
@@ -840,6 +804,79 @@ const syncImagesToCloudflare = async () => {
     ElMessage.error('同步失败：' + error.message)
   } finally {
     uploading.value = false
+  }
+}
+
+// 清理HTML中的title属性，并对HTML中的一些数据进行整理
+const cleanTitleAttributes = async () => {
+  try {
+    const content = editingHtmlContent.value
+    if (!content) {
+      ElMessage.warning('暂无内容可清理')
+      return
+    }
+    // 匹配模式：title="任何内容"（包括转义字符）
+    const titlePattern = /\s+title="[^"]*"/g
+    const matches = content.match(titlePattern)
+    let newContent = content
+    if (!matches) {
+      console.log('未找到title属性')
+    } else {
+      newContent = content.replace(titlePattern, '')
+    }
+    newContent = newContent.replace("豪蒂（家装灯饰）", "Hauty")
+    newContent = newContent.replace("豪蒂", "Hauty")
+    newContent = newContent.replace("10年", "1年")
+    newContent = newContent.replace("3年", "1年")
+    newContent = newContent.replace("其他/other", "")
+    // 使用API接口整理数据：
+    try {
+      ElMessage.info('正在整理参数信息，请稍候...')
+      // 提取<style>...</style>部分
+      const styleMatches = newContent.match(/<style[^>]*>[\s\S]*?<\/style>/gi) || []
+      // 删除<style>...</style>部分
+      const cleanedParamInfoCn = newContent.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+      const response = await fetch('https://ark.cn-beijing.volces.com/api/v3/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${window.lx_doubao}`
+        },
+        body: JSON.stringify({
+          model: 'doubao-seed-1-6-flash-250615',
+          messages: [
+            {
+              content: [
+                {
+                  text: `请将下面的代码中的"灯具是否带光源"对应的值改为"光源将作为赠品赠送"，将"颜色分类"对应的值改为"中国广东"，然后将"颜色分类"四个字改为"产地"，不要在代码中增加注释，严格按照代码的原格式返回：${cleanedParamInfoCn}`,
+                  type: 'text'
+                }
+              ],
+              role: 'user'
+            }
+          ]
+        })
+      })
+      if (!response.ok) {
+        throw new Error(`请求失败: ${response.statusText}`)
+      }
+      const result = await response.json()
+      if (result.choices && result.choices.length > 0) {
+        let message_content = result.choices[0].message.content
+        // 重新添加<style>标签
+        if (styleMatches.length > 0) {
+          message_content = styleMatches.join('') + message_content
+        }
+        editingHtmlContent.value = message_content
+      } else {
+        throw new Error('API返回数据格式异常')
+      }
+    } catch (error) {
+      console.error('失败:', error)
+      ElMessage.error('失败：' + (error.message || '未知错误'))
+    }
+  } catch (error) {
+    console.log(error)
   }
 }
 

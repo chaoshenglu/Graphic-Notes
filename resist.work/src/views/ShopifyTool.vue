@@ -1,16 +1,10 @@
 <template>
-  <div class="p-6 bg-gray-50 min-h-screen">
+  <div class="min-h-screen">
     <div class="max-w-7xl mx-auto">
-      <!-- 页面标题 -->
-      <div class="mb-6">
-        <h1 class="text-3xl font-bold text-gray-900 mb-2">Shopify 商品管理</h1>
-        <p class="text-gray-600">管理和查看您的 Shopify 店铺商品</p>
-      </div>
-
-      <!-- 操作栏 -->
       <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
         <div class="flex justify-between items-center">
           <div class="flex items-center space-x-4">
+            <span class="font-bold">Shopify</span>
             <el-input
               v-model="searchQuery"
               placeholder="搜索商品名称..."
@@ -42,7 +36,7 @@
           class="w-full"
           :header-cell-style="{ backgroundColor: '#f8fafc', color: '#374151', fontWeight: '600' }"
         >          
-          <el-table-column label="商品图片" width="120" align="center">
+          <el-table-column label="image" width="120" align="center">
             <template #default="{ row }">
               <div class="flex justify-center">
                 <img
@@ -55,13 +49,13 @@
             </template>
           </el-table-column>
 
-          <el-table-column prop="title" label="商品名称" min-width="200">
+          <el-table-column prop="title" label="title" min-width="200">
             <template #default="{ row }">
               <div class="font-medium text-gray-900 truncate" :title="row.title">
                 {{ row.title }}
               </div>
               <div class="text-sm text-gray-500 mt-1 flex items-center" v-if="row.id">
-                <span>ID: {{ row.id }}</span>
+                <span>Shopify ID: {{ row.id }}</span>
                 <el-button
                   type="primary"
                   size="small"
@@ -76,13 +70,13 @@
             </template>
           </el-table-column>
 
-          <el-table-column prop="product_type" label="商品类型" width="120" align="center">
+          <el-table-column prop="product_type" label="product type" width="120" align="center">
             <template #default="{ row }">
               <el-tag size="small" type="info">{{ row.product_type || '未分类' }}</el-tag>
             </template>
           </el-table-column>
 
-          <el-table-column label="价格" width="120" align="center">
+          <el-table-column label="price" width="120" align="center">
             <template #default="{ row }">
               <div class="font-semibold text-green-600" v-if="row.variants && row.variants.length > 0">
                 ${{ row.variants[0].price }}
@@ -91,7 +85,7 @@
             </template>
           </el-table-column>
 
-          <el-table-column label="库存" width="100" align="center">
+          <el-table-column label="inventory" width="100" align="center">
             <template #default="{ row }">
               <div v-if="row.variants && row.variants.length > 0">
                 <el-tag
@@ -105,7 +99,7 @@
             </template>
           </el-table-column>
 
-          <el-table-column label="品牌" width="100" align="center">
+          <el-table-column label="vendor" width="100" align="center">
             <template #default="{ row }">
               <div class="text-sm text-gray-600">
                 {{ row.vendor }}
@@ -113,7 +107,7 @@
             </template>
           </el-table-column>
 
-          <el-table-column label="操作" width="120" align="center" fixed="right">
+          <el-table-column label="actions" width="120" align="center" fixed="right">
             <template #default="{ row }">
               <div class="flex justify-center space-x-2">
                 <el-button
@@ -351,15 +345,3 @@ onMounted(() => {
   fetchProducts()
 })
 </script>
-
-<style scoped>
-/* 自定义样式可以在这里添加，主要使用 UnoCSS */
-.el-table {
-  --el-table-border-color: #e5e7eb;
-}
-
-.el-pagination {
-  --el-pagination-button-color: #6b7280;
-  --el-pagination-hover-color: #3b82f6;
-}
-</style>

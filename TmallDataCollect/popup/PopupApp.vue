@@ -261,7 +261,7 @@ export default {
         const result = await new Promise((resolve, reject) => {
           const timeout = setTimeout(() => {
             reject(new Error('采集超时，请确保页面已完全加载'))
-          }, 30000)
+          }, 50000)
 
           chrome.tabs.sendMessage(tab.id, { action: 'collectData' }, (response) => {
             clearTimeout(timeout)
