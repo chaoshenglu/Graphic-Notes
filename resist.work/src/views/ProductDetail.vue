@@ -433,7 +433,7 @@ const translateParamHtml = async () => {
           {
             content: [
               {
-                text: `请将下面的代码中的中文翻译成英文(翻译后按原代码格式返回)：${cleanedParamInfoCn}`,
+                text: `请将下面的代码中的中文翻译成英文(翻译后按原代码格式返回，不要使用 Markdown 格式)：${cleanedParamInfoCn}`,
                 type: 'text'
               }
             ],
@@ -848,7 +848,7 @@ const cleanTitleAttributes = async () => {
             {
               content: [
                 {
-                  text: `请将下面的代码中的"灯具是否带光源"对应的值改为"光源将作为赠品赠送"，将"颜色分类"对应的值改为"中国广东"，然后将"颜色分类"四个字改为"产地"，不要在代码中增加注释，严格按照代码的原格式返回：${cleanedParamInfoCn}`,
+                  text: `请将下面的代码中的"灯具是否带光源"对应的值改为"光源将作为赠品赠送"，将"颜色分类"对应的值改为"中国广东"，然后将"颜色分类"四个字改为"产地"，不要在代码中增加注释，不要使用 Markdown 格式，直接返回代码本体。：${cleanedParamInfoCn}`,
                   type: 'text'
                 }
               ],
