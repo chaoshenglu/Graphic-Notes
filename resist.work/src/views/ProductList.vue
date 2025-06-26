@@ -191,8 +191,8 @@ const deleteProduct = (row) => {
   })
 }
 
-// 组件挂载时获取数据
 onMounted(() => {
+  document.title = 'Hauty商品列表'
   fetchProductList()
 })
 </script>

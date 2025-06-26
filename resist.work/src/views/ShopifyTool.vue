@@ -105,21 +105,10 @@
             </template>
           </el-table-column>
 
-          <el-table-column label="状态" width="100" align="center">
-            <template #default="{ row }">
-              <el-tag
-                :type="row.status === 'active' ? 'success' : 'warning'"
-                size="small"
-              >
-                {{ row.status === 'active' ? '已发布' : '草稿' }}
-              </el-tag>
-            </template>
-          </el-table-column>
-
-          <el-table-column label="创建时间" width="150" align="center">
+          <el-table-column label="品牌" width="100" align="center">
             <template #default="{ row }">
               <div class="text-sm text-gray-600">
-                {{ formatDate(row.created_at) }}
+                {{ row.vendor }}
               </div>
             </template>
           </el-table-column>
@@ -134,14 +123,6 @@
                   link
                 >
                   查看
-                </el-button>
-                <el-button
-                  type="warning"
-                  size="small"
-                  @click="editProduct(row)"
-                  link
-                >
-                  编辑
                 </el-button>
               </div>
             </template>
@@ -365,8 +346,8 @@ const copyToClipboard = async (text) => {
   }
 }
 
-// 生命周期
 onMounted(() => {
+  document.title = 'Shopify商品管理'
   fetchProducts()
 })
 </script>

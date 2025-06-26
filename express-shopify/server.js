@@ -91,8 +91,8 @@ app.get('/api/test-proxy', async (req, res) => {
     
     const testUrls = [
       'https://www.google.com',
-      'https://api.github.com',
-      'https://httpbin.org/ip'
+      'https://www.facebook.com',
+      'https://openai.com'
     ];
     
     const results = [];

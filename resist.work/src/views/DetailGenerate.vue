@@ -86,14 +86,14 @@ const generateHtmlCode = () => {
   // 生成图片链接数组
   const imageUrls = []
   for (let i = 1; i <= count; i++) {
-    imageUrls.push(`https://tiffanylamps.art/${id}/detail/image-${i}.webp`)
+    imageUrls.push(`https://tiffanylamps.art/${id}/detail/${i}.webp`)
   }
   
   // 生成img标签
   const imgTags = imageUrls.map(url => `  <img src="${url}">`).join('\n')
   
   // 生成完整的HTML代码
-  return `<div style="display: flex;flex-direction: column;">\n${imgTags}\n</div>`
+  return `<div style="display: flex;flex-direction: column;border-radius: 8px;box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);overflow: hidden;">\n${imgTags}\n</div>`
 }
 
 // 复制到剪贴板

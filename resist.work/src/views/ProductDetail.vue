@@ -1,7 +1,12 @@
 <template>
   <div class="max-w-6xl mx-auto p-5 font-sans">
     <div class="flex" style="position: fixed;top:100px;left:0" v-if="productData && productData.shopify_id">
-      <el-button class="ml-5px" @click="synchronizeProductInfoToShopify">同步商品信息到shopify</el-button>
+      <el-button v-if="productData.product_html" class="ml-5px" @click="previewProductHtml">预览product_html</el-button>
+      <el-button v-else class="ml-5px" @click="previewProductHtml">product_html为空</el-button>
+      <el-button class="ml-5px" @click="synchronizeProductInfoToShopify">同步商品到shopify</el-button>
+    </div>
+    <div class="flex" style="position: fixed;top:100px;left:320px;cursor: pointer;">
+      <img src="/src/assets/back.svg" @click="backToList">
     </div>
     <div class="mb-8 text-center">
       <h1 class="text-3xl font-bold text-gray-800 mb-3 leading-tight">{{ productData?.title_cn || 'No Chinese Title' }}
@@ -38,6 +43,7 @@
     <div style="display: flex;flex-direction: row;align-items: center;margin-bottom: 20px;">
       <span class="font-semibold text-gray-900 text-15px mr-10px">分类:</span>
       <el-radio-group v-model="productData.cate" v-if="productData && productData.cate">
+        <el-radio value="Not decided" size="large">Not decided</el-radio>
         <el-radio value="Night Light" size="large">Night Light</el-radio>
         <el-radio value="Table Lamp" size="large">Table Lamp</el-radio>
         <el-radio value="Wall Lamp" size="large">Wall Lamp</el-radio>
@@ -172,12 +178,24 @@
         </span>
       </template>
     </el-dialog>
+
+    <el-dialog v-model="showProductHtmlEditModal" title="编辑图片详情页"
+      width="70%" :center="true" class="mt-5vh mb-5vh max-h-90vh flex flex-col">
+      <el-input v-model="editingProductHtmlContent" type="textarea" placeholder="请输入HTML内容"
+        class="font-mono text-sm leading-relaxed" :autosize="{ minRows: 25, maxRows: 35 }" />
+      <template #footer>
+        <span class="flex justify-end gap-3">
+          <el-button @click="showProductHtmlEditModal = false">取消</el-button>
+          <el-button type="primary" @click="updateProductHtml">保存</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import { Edit, CopyDocument, ZoomIn, Delete, Download } from '@element-plus/icons-vue'
@@ -188,7 +206,7 @@ const productData = ref(null)
 const loading = ref(false)
 const error = ref(null)
 const uploading = ref(false)
-
+const router = useRouter()
 // SKU编辑相关状态
 const showSkuEditModal = ref(false)
 const currentEditingSku = ref(null)
@@ -203,30 +221,65 @@ const showHtmlEditModal = ref(false)
 const editingHtmlContent = ref('')
 const savingHtml = ref(false)
 const editingLanguage = ref('cn') // 'cn' 表示编辑中文，'en' 表示编辑英文
+const showProductHtmlEditModal = ref(false)
+const editingProductHtmlContent = ref('')
+
+function backToList() {
+  router.push({
+    name: 'ProductList',
+  })
+}
+
+function previewProductHtml() {
+  editingProductHtmlContent.value = productData.value?.product_html || ''
+  showProductHtmlEditModal.value = true
+}
 
 // 同步一些商品属性到Shopify
 const synchronizeProductInfoToShopify = async () => {
-  if (!productData.value?.shopify_id) {
+  const param_info_en = productData.value.param_info_en || ""
+  const param_info_cn = productData.value.param_info_cn || ""
+  const shopify_id = productData.value.shopify_id || ''
+  const product_html = productData.value.product_html || ''
+  const title_en = productData.value.title_en || ''
+
+  if (shopify_id == '') {
     ElMessage.error('缺少Shopify ID，无法同步')
     return
   }
-
+  if (product_html == '') {
+    ElMessage.error('缺少product_html，无法同步')
+    return
+  }
+  if (title_en == '') {
+    ElMessage.error('缺少title_en，无法同步')
+    return
+  }
+  if (productData.value.cate == 'Not decided') {
+    ElMessage.error('缺少cate，无法同步')
+    return
+  }
+  if (param_info_en == '') {
+    ElMessage.error('缺少param_info_en，无法同步')
+    return
+  }
+  if (param_info_cn == '') {
+    ElMessage.error('缺少param_info_cn，无法同步')
+    return
+  }
   try {
     ElMessage.info('正在同步商品信息到Shopify，请稍候...')
     const prefix = `<p class="section-title">Parameter information</p>`
-    const param_info_en = productData.value.param_info_en || "<p></p>"
-    const param_info_cn = productData.value.param_info_cn || "<p></p>"
-    
     const updateData = {
-      "title": productData.value.title_en || '',
-      "product_type": productData.value.cate || '',
+      "title": title_en,
+      "product_type": productData.value.cate,
       "vendor": "Hauty",
-      "body_html": prefix + param_info_en + param_info_cn
+      "body_html": prefix + param_info_en + param_info_cn + product_html
     }
 
     // 调用后端API同步到Shopify
     const response = await axios.put(
-      `http://localhost:3000/api/products/${productData.value.shopify_id}`,
+      `http://localhost:3000/api/products/${shopify_id}`,
       updateData,
       {
         headers: {
@@ -255,7 +308,7 @@ const fetchProductDetail = async (productId) => {
     loading.value = true
     const response = await axios.get(`${window.lx_host}/products/${productId}`)
     if (!response.data.data.cate) {
-      response.data.data.cate = "Night Light"
+      response.data.data.cate = "Not decided"
     }
     productData.value = response.data.data
   } catch (err) {
@@ -567,20 +620,21 @@ const previewImage = (imageUrl) => {
 
 // 确认删除图片
 const confirmDeleteImage = async (index) => {
-  try {
-    await ElMessageBox.confirm(
-      '确定要删除这张详情图片吗？',
-      '删除确认',
-      {
-        confirmButtonText: '确认删除',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }
-    )
-    await deleteDetailImage(index)
-  } catch (error) {
-    // 用户取消操作
-  }
+  await deleteDetailImage(index)
+  // try {
+  //   await ElMessageBox.confirm(
+  //     '确定要删除这张详情图片吗？',
+  //     '删除确认',
+  //     {
+  //       confirmButtonText: '确认删除',
+  //       cancelButtonText: '取消',
+  //       type: 'warning'
+  //     }
+  //   )
+  //   await deleteDetailImage(index)
+  // } catch (error) {
+  //   // 用户取消操作
+  // }
 }
 
 // 删除详情图片
@@ -606,10 +660,17 @@ const downloadImage = async (imageUrl, filename) => {
   try {
     const response = await fetch(imageUrl)
     const blob = await response.blob()
-    const url = window.URL.createObjectURL(blob)
+    
+    // 将图片转换为WebP格式
+    const webpBlob = await convertToWebP(blob, 95)
+    
+    // 修改文件名为.webp格式
+    const webpFilename = filename.replace(/\.[^.]+$/, '.webp')
+    
+    const url = window.URL.createObjectURL(webpBlob)
     const link = document.createElement('a')
     link.href = url
-    link.download = filename
+    link.download = webpFilename
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -679,6 +740,40 @@ const downloadAllSkuImages = async () => {
   }
 }
 
+const generateDetailImagesHtml = () => {
+  const id = productData.value.product_id
+  const count = productData.value.detail_images_cn.length || []
+  const imageUrls = []
+  for (let i = 1; i <= count; i++) {
+    imageUrls.push(`https://tiffanylamps.art/${id}/detail/${i}.webp`)
+  }
+  const imgTags = imageUrls.map(url => `  <img src="${url}">`).join('\n')
+  return `<div style="display: flex;flex-direction: column;border-radius: 8px;box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);overflow: hidden;">\n${imgTags}\n</div>`
+}
+
+// 更新product_html
+const updateProductHtml = async () => {
+  let new_product_html = ''
+  if (showProductHtmlEditModal.value) {
+    new_product_html = editingProductHtmlContent.value
+  }else{
+    new_product_html = generateDetailImagesHtml()
+  }
+  try {
+    const productId = route.params.id
+    const updateData = {
+      ...productData.value,
+      product_html: new_product_html
+    }
+    await axios.put(`${window.lx_host}/products/${productId}`, updateData)
+    productData.value.product_html = new_product_html
+    ElMessage.success('product_html更新成功')
+    showProductHtmlEditModal.value = false
+  } catch (error) {
+    ElMessage.error('更新失败：' + (error.response?.data?.message || error.message))
+  }
+}
+
 // 同步图片到Cloudflare
 const syncImagesToCloudflare = async () => {
   const detailImages = productData.value?.detail_images_cn
@@ -735,6 +830,7 @@ const syncImagesToCloudflare = async () => {
     if (uploadedUrls.length > 0) {
       ElMessage.success(`成功使用Squoosh将 ${uploadedUrls.length} 张图片转换为WebP格式并同步到Cloudflare R2`)
       console.log('通过Squoosh转换并上传成功的WebP图片URLs:', uploadedUrls)
+      updateProductHtml()
     } else {
       ElMessage.error('没有图片上传成功')
     }
@@ -748,6 +844,7 @@ const syncImagesToCloudflare = async () => {
 }
 
 onMounted(() => {
+  document.title = 'Hauty商品详情'
   const productId = route.params.id
   fetchProductDetail(productId)
 })
