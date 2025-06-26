@@ -23,7 +23,7 @@
               </template>
             </el-input>
             <el-button type="primary" @click="refreshProducts" :loading="loading">
-              <i class="i-carbon-refresh mr-2"></i>
+              <i class="i-carbon-restart mr-2"></i>
               刷新
             </el-button>
           </div>
