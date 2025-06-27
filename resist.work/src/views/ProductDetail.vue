@@ -127,7 +127,7 @@
             class="absolute inset-0 bg-black/50 flex items-center justify-center gap-3 opacity-0 transition-opacity duration-300 rounded-lg group-hover:opacity-100">
             <el-button type="primary" :icon="ZoomIn" circle size="small" @click.stop="previewImage(image)"
               title="放大预览" />
-            <el-button type="danger" :icon="Delete" circle size="small" @click.stop="confirmDeleteImage(index)"
+            <el-button type="danger" :icon="Delete" circle size="small" @click.stop="deleteDetailImage(index)"
               title="删除图片" />
           </div>
         </div>
@@ -214,16 +214,11 @@ const loading = ref(false)
 const error = ref(null)
 const uploading = ref(false)
 const router = useRouter()
-// SKU编辑相关状态
 const showSkuEditModal = ref(false)
 const currentEditingSku = ref(null)
 const currentSkuIndex = ref(-1)
-
-// 图片预览相关状态
 const showImagePreview = ref(false)
 const previewImageUrl = ref('')
-
-// HTML编辑相关状态
 const showHtmlEditModal = ref(false)
 const editingHtmlContent = ref('')
 const savingHtml = ref(false)
@@ -232,7 +227,6 @@ const showProductHtmlEditModal = ref(false)
 const editingProductHtmlContent = ref('')
 
 async function fanyiSku() {
-  // 处理sku_data中的price字段，转换为int类型并乘以0.43
   if (productData.value?.sku_data && productData.value.sku_data.length > 0) {
     productData.value.sku_data.forEach(sku => {
       if (sku.price) {
@@ -364,7 +358,6 @@ const synchronizeSkuToShopify = async () => {
   }
 }
 
-// 获取产品详情
 const fetchProductDetail = async (productId) => {
   try {
     loading.value = true
@@ -380,7 +373,6 @@ const fetchProductDetail = async (productId) => {
   }
 }
 
-// 编辑英文标题
 const editTitleEn = async () => {
   try {
     const { value } = await ElMessageBox.prompt(
@@ -402,7 +394,6 @@ const editTitleEn = async () => {
   }
 }
 
-// 复制英文标题
 const copyTitleEn = async () => {
   const titleEn = productData.value?.title_en
   if (!titleEn) {
@@ -433,7 +424,6 @@ const saveCate = async (newCate) => {
   }
 }
 
-// 更新产品标题
 const updateProductTitle = async (newTitleEn) => {
   try {
     const productId = route.params.id
@@ -449,28 +439,24 @@ const updateProductTitle = async (newTitleEn) => {
   }
 }
 
-// 编辑参数HTML
 const editParamHtml = () => {
   editingHtmlContent.value = productData.value?.param_info_cn || ''
   editingLanguage.value = 'cn'
   showHtmlEditModal.value = true
 }
 
-// 编辑英文版参数HTML
 const editEnglishParamHtml = () => {
   editingHtmlContent.value = productData.value?.param_info_en || ''
   editingLanguage.value = 'en'
   showHtmlEditModal.value = true
 }
 
-// 翻译HTML
 const translateParamHtml = async () => {
   let paramInfoCn = productData.value?.param_info_cn
   if (!paramInfoCn || paramInfoCn.trim() === '') {
     ElMessage.warning('暂无中文参数信息可翻译')
     return
   }
-
   try {
     ElMessage.info('正在翻译参数信息，请稍候...')
     // 删除<style>...</style>部分
@@ -479,7 +465,6 @@ const translateParamHtml = async () => {
       ElMessage.warning('删除样式后暂无内容可翻译')
       return
     }
-    // 调用豆包API进行翻译
     const response = await fetch('https://ark.cn-beijing.volces.com/api/v3/chat/completions', {
       method: 'POST',
       headers: {
@@ -527,7 +512,6 @@ const translateParamHtml = async () => {
   }
 }
 
-// 保存参数HTML
 const saveParamHtml = async () => {
   try {
     savingHtml.value = true
@@ -556,7 +540,6 @@ const saveParamHtml = async () => {
   }
 }
 
-// 编辑Shopify ID
 const editShopifyId = async () => {
   try {
     const { value } = await ElMessageBox.prompt(
@@ -578,14 +561,12 @@ const editShopifyId = async () => {
   }
 }
 
-// 复制Shopify ID
 const copyShopifyId = async () => {
   const shopifyId = productData.value?.shopify_id
   if (!shopifyId || shopifyId === 'N/A') {
     ElMessage.warning('暂无Shopify ID可复制')
     return
   }
-
   try {
     await navigator.clipboard.writeText(shopifyId)
     ElMessage.success('Shopify ID已复制到剪贴板')
@@ -594,7 +575,6 @@ const copyShopifyId = async () => {
   }
 }
 
-// 更新Shopify ID
 const updateShopifyId = async (newShopifyId) => {
   try {
     const productId = route.params.id
@@ -610,7 +590,6 @@ const updateShopifyId = async (newShopifyId) => {
   }
 }
 
-// 打开SKU编辑弹窗
 const openSkuEditModal = (sku, index) => {
   currentEditingSku.value = { ...sku }
   currentSkuIndex.value = index
@@ -623,18 +602,11 @@ const handleSkuSaveSuccess = (result) => {
   }
 }
 
-// 预览图片
 const previewImage = (imageUrl) => {
   previewImageUrl.value = imageUrl
   showImagePreview.value = true
 }
 
-// 确认删除图片
-const confirmDeleteImage = async (index) => {
-  await deleteDetailImage(index)
-}
-
-// 删除详情图片
 const deleteDetailImage = async (index) => {
   try {
     const productId = route.params.id
@@ -652,13 +624,10 @@ const deleteDetailImage = async (index) => {
   }
 }
 
-// 下载单张图片
 const downloadImage = async (imageUrl, filename) => {
   try {
     const response = await fetch(imageUrl)
     const blob = await response.blob()
-
-    // 将图片转换为WebP格式
     const webpBlob = await convertToWebP(blob, 95)
     const webpFilename = filename.replace(/\.[^.]+$/, '.webp')
     const url = window.URL.createObjectURL(webpBlob)
@@ -675,45 +644,36 @@ const downloadImage = async (imageUrl, filename) => {
   }
 }
 
-// 下载全部主图
 const downloadAllMainImages = async () => {
   const mainImages = productData.value?.main_images_cn
   if (!mainImages || mainImages.length === 0) {
     ElMessage.warning('暂无主图可下载')
     return
   }
-
   try {
     ElMessage.info('开始下载主图，请稍候...')
-
     for (let i = 0; i < mainImages.length; i++) {
       const imageUrl = mainImages[i]
       const filename = `${productData.value.product_id}_${i + 1}.jpg`
       await downloadImage(imageUrl, filename)
-
-      // 添加延迟避免浏览器阻止多个下载
       if (i < mainImages.length - 1) {
         await new Promise(resolve => setTimeout(resolve, 500))
       }
     }
-
     ElMessage.success(`成功下载 ${mainImages.length} 张主图`)
   } catch (error) {
     ElMessage.error('下载失败：' + error.message)
   }
 }
 
-// 下载全部SKU图片
 const downloadAllSkuImages = async () => {
   const skuData = productData.value?.sku_data
   if (!skuData || skuData.length === 0) {
     ElMessage.warning('暂无SKU图片可下载')
     return
   }
-
   try {
     ElMessage.info('开始下载SKU图片，请稍候...')
-
     for (let i = 0; i < skuData.length; i++) {
       const sku = skuData[i]
       if (sku.skuImageUrl) {
@@ -724,7 +684,6 @@ const downloadAllSkuImages = async () => {
         }
       }
     }
-
     const validSkuCount = skuData.filter(sku => sku.skuImageUrl).length
     ElMessage.success(`成功下载 ${validSkuCount} 张SKU图片`)
   } catch (error) {
@@ -752,7 +711,6 @@ const generateDetailImagesHtml = () => {
   return `<div style="display: flex;flex-direction: column;border-radius: 8px;box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);overflow: hidden;">\n${imgTags}\n</div>`
 }
 
-// 更新product_html
 const updateProductHtml = async () => {
   let new_product_html = ''
   if (showProductHtmlEditModal.value) {
@@ -775,23 +733,18 @@ const updateProductHtml = async () => {
   }
 }
 
-// 同步图片到Cloudflare
 const syncImagesToCloudflare = async () => {
   const detailImages = productData.value?.detail_images_cn
   if (!detailImages || detailImages.length === 0) {
     ElMessage.warning('暂无详情图片可同步')
     return
   }
-
   try {
     uploading.value = true
     ElMessage.info(`开始同步 ${detailImages.length} 张详情图片到Cloudflare（使用Squoosh转换为WebP格式），请稍候...`)
-
     const uploadedUrls = []
-
     for (let i = 0; i < detailImages.length; i++) {
       const imageUrl = detailImages[i]
-
       try {
         const response = await fetch(imageUrl)
         if (!response.ok) {
@@ -804,30 +757,23 @@ const syncImagesToCloudflare = async () => {
         const filename = `${productData.value.product_id}/detail/${i + 1}.webp`
         const file = new File([webpBlob], filename, { type: 'image/webp' })
         formData.append('file', file)
-
-        // 上传到Cloudflare R2
         const uploadResponse = await axios.post(`${window.lx_host}/upload-to-r2`, formData, {
           headers: {}
         })
-
         if (uploadResponse.data.success) {
           uploadedUrls.push(uploadResponse.data.url)
           ElMessage.success(`第 ${i + 1} 张图片已通过Squoosh转换为WebP格式并上传成功`)
         } else {
           throw new Error(uploadResponse.data.message || '上传失败')
         }
-
-        // 添加延迟避免请求过于频繁
         if (i < detailImages.length - 1) {
           await new Promise(resolve => setTimeout(resolve, 500))
         }
-
       } catch (error) {
         console.error(`上传第 ${i + 1} 张图片失败:`, error)
         ElMessage.error(`第 ${i + 1} 张图片上传失败: ${error.message}`)
       }
     }
-
     if (uploadedUrls.length > 0) {
       ElMessage.success(`成功使用Squoosh将 ${uploadedUrls.length} 张图片转换为WebP格式并同步到Cloudflare R2`)
       console.log('通过Squoosh转换并上传成功的WebP图片URLs:', uploadedUrls)
@@ -835,7 +781,6 @@ const syncImagesToCloudflare = async () => {
     } else {
       ElMessage.error('没有图片上传成功')
     }
-
   } catch (error) {
     console.error('同步图片失败:', error)
     ElMessage.error('同步失败：' + error.message)
@@ -844,7 +789,6 @@ const syncImagesToCloudflare = async () => {
   }
 }
 
-// 清理HTML中的title属性，并对HTML中的一些数据进行整理
 const cleanTitleAttributes = async () => {
   try {
     const content = editingHtmlContent.value
@@ -974,7 +918,6 @@ const synchronizeProductHtmlToShopify = async () => {
   }
 }
 
-// 同步一些商品属性到Shopify
 const synchronizeProductInfoToShopify = async () => {
   let param_info_en = productData.value.param_info_en || ""
   let param_info_cn = productData.value.param_info_cn || ""
@@ -1035,25 +978,18 @@ const synchronizeProductInfoToShopify = async () => {
       updateData.options = updateData_options
       updateData.variants = updateData_variants
     }
-    console.log('updateData :', updateData);
-    // 调用后端API同步到Shopify
-    const response = await axios.put(
-      `http://localhost:3000/api/products/${shopify_id}`,
-      updateData,
-      {
+    const response = await axios.put(`http://localhost:3000/api/products/${shopify_id}`,updateData, {
         headers: {
           'Content-Type': 'application/json'
         }
       }
     )
-
     if (response.data.success) {
       ElMessage.success('商品信息已成功同步到Shopify')
       console.log('Shopify同步成功:', response.data)
     } else {
       throw new Error(response.data.message || '同步失败')
     }
-
   } catch (error) {
     console.error('同步到Shopify失败:', error)
     const errorMessage = error.response?.data?.message || error.message || '同步失败'
