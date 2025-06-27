@@ -102,9 +102,9 @@
           <div class="p-3">
             <div class="text-sm font-semibold text-gray-800 mb-1 leading-tight">{{ sku.skuNameCn }}</div>
             <div class="text-xs text-gray-600 mb-2 leading-tight">{{ sku.skuNameEn || 'No English Name' }}</div>
-            <div v-if="sku.skuNameEn" class="text-base font-bold text-red-600">{{ sku.price ? `$${sku.price}` : '-' }}
+            <div class="text-base font-bold text-red-600">{{ sku.price_en ? `$${sku.price}` : '-' }}
             </div>
-            <div v-else class="text-base font-bold text-red-600">{{ sku.price ? `¥${sku.price}` : '-' }}</div>
+            <div class="text-base font-bold text-red-600">{{ sku.price ? `¥${sku.price}` : '-' }}</div>
           </div>
         </div>
         <div v-if="!productData?.sku_data?.length"
@@ -229,9 +229,9 @@ const editingProductHtmlContent = ref('')
 async function fanyiSku() {
   if (productData.value?.sku_data && productData.value.sku_data.length > 0) {
     productData.value.sku_data.forEach(sku => {
-      if (sku.price && !sku.skuNameEn) {
+      if (sku.price) {
         const originalPrice = parseFloat(sku.price)
-        sku.price = Math.round(originalPrice * 0.43)
+        sku.price_en = Math.round(originalPrice * 0.43)
         console.log(`${originalPrice} => ${sku.price}`)
       }
     })
