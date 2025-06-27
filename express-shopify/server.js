@@ -362,19 +362,21 @@ app.put('/api/products/:id',
     title: { type: 'string', maxLength: 255 },
     product_type: { type: 'string', maxLength: 255 },
     vendor: { type: 'string', maxLength: 255 },
-    body_html: { type: 'string', maxLength: 65535 }
+    body_html: { type: 'string', maxLength: 65535 },
+    variants: { type: 'array' },
+    options: { type: 'array' }
   }),
   async (req, res) => {
     try {
       const { id: productId } = req.validatedParams;
-      const { title, product_type, vendor, body_html } = req.body;
+      const { title, product_type, vendor, body_html, variants, options } = req.body;
       
       // 检查是否至少提供了一个要更新的字段
-      if (!title && !product_type && !vendor && body_html === undefined) {
+      if (!title && !product_type && !vendor && body_html === undefined && !variants && !options) {
         return res.status(400).json({
           success: false,
           error: '请求参数错误',
-          message: '至少需要提供一个要更新的字段（title, product_type, vendor, body_html）'
+          message: '至少需要提供一个要更新的字段（title, product_type, vendor, body_html, variants, options）'
         });
       }
       
@@ -389,6 +391,8 @@ app.put('/api/products/:id',
       if (product_type !== undefined) updateData.product.product_type = product_type;
       if (vendor !== undefined) updateData.product.vendor = vendor;
       if (body_html !== undefined) updateData.product.body_html = body_html;
+      if (variants !== undefined) updateData.product.variants = variants;
+      if (options !== undefined) updateData.product.options = options;
 
       const client = new shopify.clients.Rest({ 
         session,

@@ -1,0 +1,33 @@
+{
+    "variants": [
+        {
+            "price": "1",
+            "compare_at_price":"",
+            "product_id": 14698439082349,
+            "title": "style1",
+            "option1":"style1"
+        },
+        {
+            "price": "2",
+            "compare_at_price":"",
+            "product_id": 14698439082349,
+            "title": "style2",
+            "option1":"style2"
+        }
+    ],
+    "options": [
+        {
+            "product_id": 14698439082349,
+            "name": "style",
+            "position": 1,
+            "values": [
+                "style1",
+                "style2"
+            ]
+        }
+    ],
+    "title": "",
+    "product_type": "",
+    "vendor": "",
+    "body_html": ""
+}

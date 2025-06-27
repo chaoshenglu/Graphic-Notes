@@ -1,9 +1,13 @@
 <template>
   <div class="max-w-6xl mx-auto p-5 font-sans">
-    <div class="flex" style="position: fixed;top:100px;left:0" v-if="productData && productData.shopify_id">
-      <el-button v-if="productData.product_html" class="ml-5px" @click="previewProductHtml">预览product_html</el-button>
-      <el-button v-else class="ml-5px" @click="previewProductHtml">product_html为空</el-button>
-      <el-button class="ml-5px" @click="synchronizeProductInfoToShopify">同步商品到shopify</el-button>
+    <div class="fixed left-5px top-100px flex flex-col">
+      <el-button class="mt-6px ml-12px" v-if="productData && productData.product_html" @click="previewProductHtml">
+        预览product_html
+      </el-button>
+      <el-button class="mt-6px ml-12px" v-else @click="previewProductHtml">product_html为空</el-button>
+      <el-button class="mt-10px" @click="synchronizeProductInfoToShopify">同步商品到shopify</el-button>
+      <el-button class="mt-10px" @click="synchronizeSkuToShopify">同步sku到shopify</el-button>
+      <el-button class="mt-10px" @click="synchronizeProductHtmlToShopify">同步细节图到shopify</el-button>
     </div>
     <div class="flex" style="position: fixed;top:100px;left:320px;cursor: pointer;">
       <img src="/src/assets/back.svg" @click="backToList">
@@ -13,7 +17,7 @@
       </h1>
       <div class="flex items-center justify-center gap-4 flex-wrap">
         <h2 class="text-xl font-normal text-gray-600 m-0 leading-relaxed">{{ productData?.title_en || 'No English Title'
-        }}</h2>
+          }}</h2>
         <div class="flex gap-2 items-center">
           <el-button type="primary" :icon="Edit" size="small" circle @click="editTitleEn" title="编辑英文标题"
             class="transition-transform duration-300 hover:scale-110" />
@@ -76,14 +80,21 @@
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-20px font-semibold text-gray-900 m-0 pb-2 inline-block"
           style="border-bottom: 2px solid #007bff;">规格选择</h3>
-        <el-button type="primary" :icon="Download" size="small" circle @click="downloadAllSkuImages" title="下载全部SKU图片"
-          :disabled="!productData?.sku_data?.length"
-          class="transition-transform duration-300 hover:scale-110 disabled:hover:scale-100" />
+        <div class="flex">
+          <img src="/src/assets/fanyi.png" style="cursor: pointer;margin-right: 16px;" @click="fanyiSku">
+          <el-button type="primary" :icon="Download" size="small" circle @click="downloadAllSkuImages" title="下载全部SKU图片"
+            :disabled="!productData?.sku_data?.length"
+            class="transition-transform duration-300 hover:scale-110 disabled:hover:scale-100" />
+        </div>
       </div>
       <div class="flex gap-4 overflow-x-auto py-4">
         <div v-for="(sku, index) in productData?.sku_data || []" :key="index"
-          class="flex-shrink-0 flex flex-col items-center justify-center w-50 bg-white border-2 border-gray-200 rounded-xl overflow-hidden transition-all duration-300 cursor-pointer relative hover:border-blue-600 hover:shadow-xl hover:-translate-y-1 group"
-          @click="openSkuEditModal(sku, index)">
+          class="flex-shrink-0 flex flex-col items-center justify-center w-50 bg-white border-2 border-gray-200 rounded-xl overflow-hidden relative">
+          <div class="text-6 absolute top-4px left-4px cursor-pointer w-16px" @click="openSkuEditModal(sku, index)">
+            <el-icon>
+            <Edit />
+          </el-icon>
+          </div>
           <div class="w-full h-48 overflow-hidden flex items-center justify-center">
             <img :src="sku.skuImageUrl" :alt="sku.skuNameCn"
               class="w-3/5 h-3/5 object-cover transition-transform duration-300 group-hover:scale-105" />
@@ -91,14 +102,9 @@
           <div class="p-3">
             <div class="text-sm font-semibold text-gray-800 mb-1 leading-tight">{{ sku.skuNameCn }}</div>
             <div class="text-xs text-gray-600 mb-2 leading-tight">{{ sku.skuNameEn || 'No English Name' }}</div>
-            <div class="text-base font-bold text-red-600">{{ sku.price ? `¥${sku.price}` : '价格待定' }}</div>
-          </div>
-          <div
-            class="absolute inset-0 bg-blue-600/90 text-white flex flex-col items-center justify-center opacity-0 translate-y-3 transition-all duration-300 text-sm font-medium group-hover:opacity-100 group-hover:translate-y-0">
-            <el-icon class="text-6 mb-1">
-              <Edit />
-            </el-icon>
-            <span class="text-xs">点击编辑</span>
+            <div v-if="sku.skuNameEn" class="text-base font-bold text-red-600">{{ sku.price ? `$${sku.price}` : '-' }}
+            </div>
+            <div v-else class="text-base font-bold text-red-600">{{ sku.price ? `¥${sku.price}` : '-' }}</div>
           </div>
         </div>
         <div v-if="!productData?.sku_data?.length"
@@ -201,6 +207,7 @@ import { ElMessageBox, ElMessage } from 'element-plus'
 import { Edit, CopyDocument, ZoomIn, Delete, Download } from '@element-plus/icons-vue'
 import SkuEditModal from '../components/SkuEditModal.vue'
 import { convertToWebP } from '../utils/imageConverter.js'
+import { translator } from '../utils/translator.js'
 const route = useRoute()
 const productData = ref(null)
 const loading = ref(false)
@@ -224,6 +231,75 @@ const editingLanguage = ref('cn') // 'cn' 表示编辑中文，'en' 表示编辑
 const showProductHtmlEditModal = ref(false)
 const editingProductHtmlContent = ref('')
 
+async function fanyiSku() {
+  // 处理sku_data中的price字段，转换为int类型并乘以0.43
+  if (productData.value?.sku_data && productData.value.sku_data.length > 0) {
+    productData.value.sku_data.forEach(sku => {
+      if (sku.price) {
+        const originalPrice = parseFloat(sku.price)
+        sku.price = Math.round(originalPrice * 0.43)
+      }
+    })
+  }
+
+  if (!productData.value?.sku_data || productData.value.sku_data.length === 0) {
+    ElMessage.warning('暂无SKU数据可翻译')
+    return
+  }
+  try {
+    ElMessage.info('正在翻译SKU名称，请稍候...')
+    const skuNamesToTranslate = productData.value.sku_data
+      .filter(sku => sku.skuNameCn && sku.skuNameCn.trim())
+      .map(sku => sku.skuNameCn)
+    if (skuNamesToTranslate.length === 0) {
+      ElMessage.warning('没有找到需要翻译的SKU中文名称')
+      return
+    }
+    const translatePromise = new Promise((resolve, reject) => {
+      translator.batchTranslate(
+        skuNamesToTranslate,
+        'zh',
+        'en',
+        (data) => {
+          if (data && data.trans_result) {
+            resolve(data.trans_result)
+          } else {
+            reject(new Error('翻译结果格式异常'))
+          }
+        },
+        (error) => {
+          reject(new Error('翻译失败: ' + error))
+        }
+      )
+    })
+    const translationResults = await translatePromise
+    const translationMap = {}
+    translationResults.forEach((result, index) => {
+      if (result && result.src && result.dst) {
+        translationMap[result.src] = result.dst
+      }
+    })
+    const sku_data_translated = productData.value.sku_data.map(sku => {
+      const translatedName = translationMap[sku.skuNameCn]
+      return {
+        ...sku,
+        skuNameEn: translatedName || sku.skuNameEn
+      }
+    })
+    const productId = route.params.id
+    const updateData = {
+      ...productData.value,
+      sku_data: sku_data_translated
+    }
+    await axios.put(`${window.lx_host}/products/${productId}`, updateData)
+    productData.value.sku_data = sku_data_translated
+    ElMessage.success(`SKU翻译完成，共翻译了 ${Object.keys(translationMap).length} 个SKU名称`)
+  } catch (error) {
+    console.error('翻译SKU失败:', error)
+    ElMessage.error('翻译失败：' + (error.message || '未知错误'))
+  }
+}
+
 function backToList() {
   router.push({
     name: 'ProductList',
@@ -235,47 +311,38 @@ function previewProductHtml() {
   showProductHtmlEditModal.value = true
 }
 
-// 同步一些商品属性到Shopify
-const synchronizeProductInfoToShopify = async () => {
-  let param_info_en = productData.value.param_info_en || ""
-  let param_info_cn = productData.value.param_info_cn || ""
-  param_info_en = param_info_en.replace(`<p class="section-title">Parameter information</p>`, '')
-  param_info_cn = param_info_cn.replace(`<p class="section-title">Parameter information</p>`, '')
+// 同步商品sku到Shopify
+const synchronizeSkuToShopify = async () => {
   const shopify_id = productData.value.shopify_id || ''
-  const product_html = productData.value.product_html || ''
-  const title_en = productData.value.title_en || ''
-
   if (shopify_id == '') {
     ElMessage.error('缺少Shopify ID，无法同步')
     return
   }
-  if (product_html == '') {
-    ElMessage.error('缺少product_html，无法同步')
-    return
-  }
-  if (title_en == '') {
-    ElMessage.error('缺少title_en，无法同步')
-    return
-  }
-  if (param_info_en == '') {
-    ElMessage.error('缺少param_info_en，无法同步')
-    return
-  }
-  if (param_info_cn == '') {
-    ElMessage.error('缺少param_info_cn，无法同步')
-    return
-  }
   try {
     ElMessage.info('正在同步商品信息到Shopify，请稍候...')
-    const prefix = `<p class="section-title">Parameter information</p>`
-    const updateData = {
-      "title": title_en,
-      "product_type": productData.value.cate,
-      "vendor": "Hauty",
-      "body_html": prefix + param_info_en + param_info_cn + product_html
+    let updateData = {}
+    if (productData.value.sku_data && productData.value.sku_data.length) {
+      let values = []
+      let updateData_variants = []
+      for (let i = 0; i < productData.value.sku_data.length; i++) {
+        let sku = productData.value.sku_data[i]
+        values.push(sku.skuNameCn)
+        updateData_variants.push({
+          "price": sku.price,
+          "compare_at_price": Math.round(sku.price * 1.2),
+          "title": sku.skuNameEn,
+          "option1": sku.skuNameEn
+        })
+      }
+      let option = {
+        "name": "style",
+        "values": values
+      }
+      let updateData_options = [option]
+      updateData.options = updateData_options
+      updateData.variants = updateData_variants
     }
-
-    // 调用后端API同步到Shopify
+    console.log('updateData :', updateData);
     const response = await axios.put(
       `http://localhost:3000/api/products/${shopify_id}`,
       updateData,
@@ -285,18 +352,15 @@ const synchronizeProductInfoToShopify = async () => {
         }
       }
     )
-
     if (response.data.success) {
-      ElMessage.success('商品信息已成功同步到Shopify')
-      console.log('Shopify同步成功:', response.data)
+      ElMessage.success('sku已成功同步到Shopify')
     } else {
       throw new Error(response.data.message || '同步失败')
     }
-
   } catch (error) {
-    console.error('同步到Shopify失败:', error)
+    console.error('同步sku到Shopify失败:', error)
     const errorMessage = error.response?.data?.message || error.message || '同步失败'
-    ElMessage.error(`同步到Shopify失败: ${errorMessage}`)
+    ElMessage.error(`同步sku到Shopify失败: ${errorMessage}`)
   }
 }
 
@@ -377,10 +441,7 @@ const updateProductTitle = async (newTitleEn) => {
       ...productData.value,
       title_en: newTitleEn
     }
-
     await axios.put(`${window.lx_host}/products/${productId}`, updateData)
-
-    // 更新本地数据
     productData.value.title_en = newTitleEn
     ElMessage.success('英文标题更新成功')
   } catch (error) {
@@ -414,12 +475,10 @@ const translateParamHtml = async () => {
     ElMessage.info('正在翻译参数信息，请稍候...')
     // 删除<style>...</style>部分
     const cleanedParamInfoCn = paramInfoCn.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-
     if (!cleanedParamInfoCn || cleanedParamInfoCn.trim() === '') {
       ElMessage.warning('删除样式后暂无内容可翻译')
       return
     }
-
     // 调用豆包API进行翻译
     const response = await fetch('https://ark.cn-beijing.volces.com/api/v3/chat/completions', {
       method: 'POST',
@@ -448,23 +507,15 @@ const translateParamHtml = async () => {
     }
 
     const result = await response.json()
-
     if (result.choices && result.choices.length > 0) {
       const translatedContent = result.choices[0].message.content
-
-      // 更新产品数据中的英文参数信息
       const productId = route.params.id
       const updateData = {
         ...productData.value,
         param_info_en: translatedContent
       }
-
-      // 保存到数据库
       await axios.put(`${window.lx_host}/products/${productId}`, updateData)
-
-      // 更新本地数据
       productData.value.param_info_en = translatedContent
-
       ElMessage.success('参数信息翻译并保存成功')
     } else {
       throw new Error('翻译API返回数据格式异常')
@@ -481,21 +532,15 @@ const saveParamHtml = async () => {
   try {
     savingHtml.value = true
     const productId = route.params.id
-
-    // 根据当前编辑的语言决定更新哪个字段
     const updateData = {
       ...productData.value
     }
-
     if (editingLanguage.value === 'cn') {
       updateData.param_info_cn = editingHtmlContent.value
     } else {
       updateData.param_info_en = editingHtmlContent.value
     }
-
     await axios.put(`${window.lx_host}/products/${productId}`, updateData)
-
-    // 更新本地数据
     if (editingLanguage.value === 'cn') {
       productData.value.param_info_cn = editingHtmlContent.value
       ElMessage.success('中文参数信息更新成功')
@@ -503,7 +548,6 @@ const saveParamHtml = async () => {
       productData.value.param_info_en = editingHtmlContent.value
       ElMessage.success('英文参数信息更新成功')
     }
-
     showHtmlEditModal.value = false
   } catch (error) {
     ElMessage.error('更新失败：' + (error.response?.data?.message || error.message))
@@ -573,9 +617,7 @@ const openSkuEditModal = (sku, index) => {
   showSkuEditModal.value = true
 }
 
-// 处理SKU保存成功
 const handleSkuSaveSuccess = (result) => {
-  // 更新本地数据
   if (productData.value && productData.value.sku_data && productData.value.sku_data[result.index]) {
     Object.assign(productData.value.sku_data[result.index], result.data)
   }
@@ -618,10 +660,7 @@ const downloadImage = async (imageUrl, filename) => {
 
     // 将图片转换为WebP格式
     const webpBlob = await convertToWebP(blob, 95)
-
-    // 修改文件名为.webp格式
     const webpFilename = filename.replace(/\.[^.]+$/, '.webp')
-
     const url = window.URL.createObjectURL(webpBlob)
     const link = document.createElement('a')
     link.href = url
@@ -678,10 +717,8 @@ const downloadAllSkuImages = async () => {
     for (let i = 0; i < skuData.length; i++) {
       const sku = skuData[i]
       if (sku.skuImageUrl) {
-        const filename = `SKU_${sku.skuNameCn || `规格${i + 1}`}.jpg`
+        const filename = `${i + 1}.【${sku.skuNameEn}】${sku.price}.jpg`
         await downloadImage(sku.skuImageUrl, filename)
-
-        // 添加延迟避免浏览器阻止多个下载
         if (i < skuData.length - 1) {
           await new Promise(resolve => setTimeout(resolve, 500))
         }
@@ -826,8 +863,7 @@ const cleanTitleAttributes = async () => {
     }
     newContent = newContent.replace("豪蒂（家装灯饰）", "Hauty")
     newContent = newContent.replace("豪蒂", "Hauty")
-    newContent = newContent.replace("10年", "1年")
-    newContent = newContent.replace("3年", "1年")
+    newContent = newContent.replace("10年", "3年")
     newContent = newContent.replace("其他/other", "")
     // 使用API接口整理数据：
     try {
@@ -885,4 +921,143 @@ onMounted(() => {
   const productId = route.params.id
   fetchProductDetail(productId)
 })
+
+const synchronizeProductHtmlToShopify = async () => {
+  let param_info_en = productData.value.param_info_en || ""
+  let param_info_cn = productData.value.param_info_cn || ""
+  param_info_en = param_info_en.replace(`<p class="section-title">Parameter information</p>`, '')
+  param_info_cn = param_info_cn.replace(`<p class="section-title">Parameter information</p>`, '')
+  const shopify_id = productData.value.shopify_id || ''
+  const product_html = productData.value.product_html || ''
+  if (shopify_id == '') {
+    ElMessage.error('缺少Shopify ID，无法同步')
+    return
+  }
+  if (product_html == '') {
+    ElMessage.error('缺少product_html，无法同步')
+    return
+  }
+  if (param_info_en == '') {
+    ElMessage.error('缺少param_info_en，无法同步')
+    return
+  }
+  if (param_info_cn == '') {
+    ElMessage.error('缺少param_info_cn，无法同步')
+    return
+  }
+  try {
+    ElMessage.info('正在同步商品信息到Shopify，请稍候...')
+    const prefix = `<p class="section-title">Parameter information</p>`
+    let updateData = {
+      "body_html": prefix + param_info_en + param_info_cn + product_html
+    }
+    console.log('updateData :', updateData);
+    const response = await axios.put(
+      `http://localhost:3000/api/products/${shopify_id}`,
+      updateData,
+      {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    )
+    if (response.data.success) {
+      ElMessage.success('商品信息已成功同步到Shopify')
+      console.log('Shopify同步成功:', response.data)
+    } else {
+      throw new Error(response.data.message || '同步失败')
+    }
+  } catch (error) {
+    console.error('同步到Shopify失败:', error)
+    const errorMessage = error.response?.data?.message || error.message || '同步失败'
+    ElMessage.error(`同步到Shopify失败: ${errorMessage}`)
+  }
+}
+
+// 同步一些商品属性到Shopify
+const synchronizeProductInfoToShopify = async () => {
+  let param_info_en = productData.value.param_info_en || ""
+  let param_info_cn = productData.value.param_info_cn || ""
+  param_info_en = param_info_en.replace(`<p class="section-title">Parameter information</p>`, '')
+  param_info_cn = param_info_cn.replace(`<p class="section-title">Parameter information</p>`, '')
+  const shopify_id = productData.value.shopify_id || ''
+  const product_html = productData.value.product_html || ''
+  const title_en = productData.value.title_en || ''
+
+  if (shopify_id == '') {
+    ElMessage.error('缺少Shopify ID，无法同步')
+    return
+  }
+  if (product_html == '') {
+    ElMessage.error('缺少product_html，无法同步')
+    return
+  }
+  if (title_en == '') {
+    ElMessage.error('缺少title_en，无法同步')
+    return
+  }
+  if (param_info_en == '') {
+    ElMessage.error('缺少param_info_en，无法同步')
+    return
+  }
+  if (param_info_cn == '') {
+    ElMessage.error('缺少param_info_cn，无法同步')
+    return
+  }
+  try {
+    ElMessage.info('正在同步商品信息到Shopify，请稍候...')
+    const prefix = `<p class="section-title">Parameter information</p>`
+    let updateData = {
+      "title": title_en,
+      "product_type": productData.value.cate,
+      "vendor": "Hauty",
+      "body_html": prefix + param_info_en + param_info_cn + product_html
+    }
+
+    if (productData.value.sku_data && productData.value.sku_data.length) {
+      let values = []
+      let updateData_variants = []
+      for (let i = 0; i < productData.value.sku_data.length; i++) {
+        let sku = productData.value.sku_data[i]
+        values.push(sku.skuNameCn)
+        updateData_variants.push({
+          "price": sku.price,
+          "compare_at_price": Math.round(sku.price * 1.2),
+          "title": sku.skuNameEn,
+          "option1": sku.skuNameEn
+        })
+      }
+      let option = {
+        "name": "style",
+        "values": values
+      }
+      let updateData_options = [option]
+      updateData.options = updateData_options
+      updateData.variants = updateData_variants
+    }
+    console.log('updateData :', updateData);
+    // 调用后端API同步到Shopify
+    const response = await axios.put(
+      `http://localhost:3000/api/products/${shopify_id}`,
+      updateData,
+      {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    )
+
+    if (response.data.success) {
+      ElMessage.success('商品信息已成功同步到Shopify')
+      console.log('Shopify同步成功:', response.data)
+    } else {
+      throw new Error(response.data.message || '同步失败')
+    }
+
+  } catch (error) {
+    console.error('同步到Shopify失败:', error)
+    const errorMessage = error.response?.data?.message || error.message || '同步失败'
+    ElMessage.error(`同步到Shopify失败: ${errorMessage}`)
+  }
+}
 </script>

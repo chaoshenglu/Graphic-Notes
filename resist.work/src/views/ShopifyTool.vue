@@ -150,7 +150,7 @@ const loading = ref(false)
 const products = ref([])
 const searchQuery = ref('')
 const currentPage = ref(1)
-const pageSize = ref(20)
+const pageSize = ref(5)
 const totalProducts = ref(0)
 
 // 分页信息存储
@@ -309,9 +309,9 @@ const handleImageError = (event) => {
   event.target.src = 'https://via.placeholder.com/150/cccccc/666666?text=No+Image'
 }
 
-const viewProduct = (product) => {
+const viewProduct = async (product) => {
   ElMessage.info(`查看商品: ${product.title}`)
-  // 这里可以跳转到商品详情页或打开详情弹窗
+  await fetch(`http://localhost:3000/api/products/${product.id}`)
 }
 
 const editProduct = (product) => {
