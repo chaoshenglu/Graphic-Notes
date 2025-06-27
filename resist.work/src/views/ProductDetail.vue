@@ -78,7 +78,7 @@
     </div>
     <div class="mb-10">
       <div class="flex items-center justify-between mb-4">
-        <h3 class="text-20px font-semibold text-gray-900 m-0 pb-2 inline-block"
+        <h3 v-if="productData" class="text-20px font-semibold text-gray-900 m-0 pb-2 inline-block"
           style="border-bottom: 2px solid #007bff;">规格选择【{{ productData.sku_data.length }}】</h3>
         <div class="flex">
           <img src="/src/assets/fanyi.png" style="cursor: pointer;margin-right: 16px;" @click="fanyiSku">
