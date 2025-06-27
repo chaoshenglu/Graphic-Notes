@@ -232,6 +232,7 @@ async function fanyiSku() {
       if (sku.price) {
         const originalPrice = parseFloat(sku.price)
         sku.price = Math.round(originalPrice * 0.43)
+        console.log(`${originalPrice} => ${sku.price}`)
       }
     })
   }
