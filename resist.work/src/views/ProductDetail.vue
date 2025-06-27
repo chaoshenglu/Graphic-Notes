@@ -249,14 +249,17 @@ async function fanyiSku() {
       ElMessage.warning('没有找到需要翻译的SKU中文名称')
       return
     }
+    // 将多个SKU名称用*符号连接成一个句子
+    const combinedQuery = skuNamesToTranslate.join('*')
+    
     const translatePromise = new Promise((resolve, reject) => {
-      translator.batchTranslate(
-        skuNamesToTranslate,
+      translator.translate(
+        combinedQuery,
         'zh',
         'en',
         (data) => {
-          if (data && data.trans_result) {
-            resolve(data.trans_result)
+          if (data && data.trans_result && data.trans_result.length > 0) {
+            resolve(data.trans_result[0].dst)
           } else {
             reject(new Error('翻译结果格式异常'))
           }
@@ -266,11 +269,16 @@ async function fanyiSku() {
         }
       )
     })
-    const translationResults = await translatePromise
+    const translatedText = await translatePromise
+    
+    // 通过*符号拆分翻译结果
+    const translatedNames = translatedText.split('*')
+    
+    // 创建翻译映射
     const translationMap = {}
-    translationResults.forEach((result, index) => {
-      if (result && result.src && result.dst) {
-        translationMap[result.src] = result.dst
+    skuNamesToTranslate.forEach((originalName, index) => {
+      if (index < translatedNames.length) {
+        translationMap[originalName] = translatedNames[index].trim()
       }
     })
     const sku_data_translated = productData.value.sku_data.map(sku => {
