@@ -79,7 +79,7 @@
     <div class="mb-10">
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-20px font-semibold text-gray-900 m-0 pb-2 inline-block"
-          style="border-bottom: 2px solid #007bff;">规格选择</h3>
+          style="border-bottom: 2px solid #007bff;">规格选择【{{ productData.sku_data.length }}】</h3>
         <div class="flex">
           <img src="/src/assets/fanyi.png" style="cursor: pointer;margin-right: 16px;" @click="fanyiSku">
           <el-button type="primary" :icon="Download" size="small" circle @click="downloadAllSkuImages" title="下载全部SKU图片"
