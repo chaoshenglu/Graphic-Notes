@@ -229,7 +229,7 @@ const editingProductHtmlContent = ref('')
 async function fanyiSku() {
   if (productData.value?.sku_data && productData.value.sku_data.length > 0) {
     productData.value.sku_data.forEach(sku => {
-      if (sku.price) {
+      if (sku.price && !sku.skuNameEn) {
         const originalPrice = parseFloat(sku.price)
         sku.price = Math.round(originalPrice * 0.43)
         console.log(`${originalPrice} => ${sku.price}`)
