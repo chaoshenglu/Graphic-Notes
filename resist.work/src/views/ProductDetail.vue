@@ -331,8 +331,8 @@ const synchronizeSkuToShopify = async () => {
         let sku = productData.value.sku_data[i]
         values.push(sku.skuNameCn)
         updateData_variants.push({
-          "price": sku.price,
-          "compare_at_price": Math.round(sku.price * 1.2),
+          "price": sku.price_en,
+          "compare_at_price": Math.round(sku.price_en * 1.2),
           "title": sku.skuNameEn,
           "option1": sku.skuNameEn
         })
@@ -973,8 +973,8 @@ const synchronizeProductInfoToShopify = async () => {
         let sku = productData.value.sku_data[i]
         values.push(sku.skuNameCn)
         updateData_variants.push({
-          "price": sku.price,
-          "compare_at_price": Math.round(sku.price * 1.2),
+          "price": sku.price_en,
+          "compare_at_price": Math.round(sku.price_en * 1.2),
           "title": sku.skuNameEn,
           "option1": sku.skuNameEn
         })
