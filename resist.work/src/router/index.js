@@ -9,7 +9,7 @@ import ProductList from '../views/ProductList.vue'
 import ProductDetail from '../views/ProductDetail.vue'
 import Watermark from '../views/Watermark.vue'
 import ShopifyTool from '../views/ShopifyTool.vue'
-import Base64Image from '../views/Base64Image.vue'
+import Setting from '../views/Setting.vue'
 
 const routes = [
   {
@@ -63,9 +63,9 @@ const routes = [
     component: ShopifyTool
   },
   {
-    path: '/base64-image',
-    name: 'Base64Image',
-    component: Base64Image
+    path: '/setting',
+    name: 'Setting',
+    component: Setting
   }
 ]
 

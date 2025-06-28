@@ -189,7 +189,7 @@ const fetchProducts = async () => {
     }
     
     // 调用Shopify API
-    const response = await fetch(`http://localhost:3000/api/products?${params.toString()}`)
+    const response = await fetch(`http://192.168.1.12:3000/api/products?${params.toString()}`)
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
@@ -311,7 +311,7 @@ const handleImageError = (event) => {
 
 const viewProduct = async (product) => {
   ElMessage.info(`查看商品: ${product.title}`)
-  await fetch(`http://localhost:3000/api/products/${product.id}`)
+  await fetch(`http://192.168.1.12:3000/api/products/${product.id}`)
 }
 
 const editProduct = (product) => {

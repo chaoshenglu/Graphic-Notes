@@ -72,14 +72,13 @@ const tools = ref([
     description: '管理Shopify销售的产品'
   },
   {
-    id: 'base64-image',
-    name: 'Base64转图片',
-    icon: '🔗',
-    description: 'Base64编码转换'
+    id: 'setting',
+    name: '系统设置',
+    icon: '⚙️',
+    description: '环境变量设置'
   }
 ])
 
-// 打开工具
 function openTool(toolId) {
   router.push(`/${toolId}`)
 }
