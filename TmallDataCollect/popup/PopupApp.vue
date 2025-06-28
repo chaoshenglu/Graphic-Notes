@@ -263,17 +263,63 @@ export default {
       }
     }
 
-    function updateSku() {
-      /*
-      参考代码：
-      const updateData = {
-      ...productData.value,
-      sku_data: sku_data
-    }
-await axios.put(`https://api.tiffanylamps.com.cn/products/${productId}`, updateData)
-      */
-    }
+    const updateSku = async () => {
+      if (!productData.value || !productData.value.product_id) {
+        statusText.value = '没有可更新的商品数据'
+        statusClass.value = 'ready'
+        return
+      }
 
+      try {
+        statusText.value = '正在更新SKU数据...'
+        statusClass.value = 'collecting'
+        
+        // 获取当前商品ID
+        const productId = productData.value.product_id
+        
+        // 构建更新数据，包含完整的商品信息和SKU数据
+        const updateData = {
+          ...productData.value,
+          sku_data: productData.value.sku_data || []
+        }
+        
+        // 发送PUT请求更新商品数据
+        const response = await axios.put(`https://api.tiffanylamps.com.cn/products/${productId}`, updateData)
+        const { data } = response
+        
+        if (data.success) {
+          statusText.value = 'SKU数据更新成功'
+          statusClass.value = 'success'
+          
+          // 更新本地存储的数据
+          saveDataToLocalStorage(productData.value)
+        } else {
+          statusText.value = `SKU更新失败：${data.message || '未知错误'}`
+          statusClass.value = 'ready'
+        }
+      } catch (error) {
+        console.error('SKU更新失败:', error)
+        let errorMessage = '网络错误'
+        
+        if (error.response && error.response.data && error.response.data.message) {
+          errorMessage = error.response.data.message
+        } else if (error.message) {
+          errorMessage = error.message
+        }
+        
+        statusText.value = `SKU更新失败：${errorMessage}`
+        statusClass.value = 'ready'
+      } finally {
+        // 3秒后重置状态文本
+        setTimeout(() => {
+          if (statusText.value.includes('SKU数据更新成功') || statusText.value.includes('SKU更新失败')) {
+            statusText.value = '准备就绪'
+            statusClass.value = 'ready'
+          }
+        }, 3000)
+      }
+    }
+    
     return {
       isCollecting,
       statusText,
@@ -282,7 +328,8 @@ await axios.put(`https://api.tiffanylamps.com.cn/products/${productId}`, updateD
       formatProductData,
       handleCollect,
       copyToClipboard,
-      uploadData
+      uploadData,
+      updateSku
     }
   }
 }
