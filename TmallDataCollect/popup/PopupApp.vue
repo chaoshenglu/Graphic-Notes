@@ -273,25 +273,15 @@ export default {
       try {
         statusText.value = '正在更新SKU数据...'
         statusClass.value = 'collecting'
-        
-        // 获取当前商品ID
         const productId = productData.value.product_id
-        
-        // 构建更新数据，包含完整的商品信息和SKU数据
         const updateData = {
-          ...productData.value,
           sku_data: productData.value.sku_data || []
         }
-        
-        // 发送PUT请求更新商品数据
         const response = await axios.put(`https://api.tiffanylamps.com.cn/products/${productId}`, updateData)
         const { data } = response
-        
         if (data.success) {
           statusText.value = 'SKU数据更新成功'
           statusClass.value = 'success'
-          
-          // 更新本地存储的数据
           saveDataToLocalStorage(productData.value)
         } else {
           statusText.value = `SKU更新失败：${data.message || '未知错误'}`
