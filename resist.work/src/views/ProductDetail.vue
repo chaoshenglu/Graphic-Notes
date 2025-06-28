@@ -102,8 +102,7 @@
           <div class="p-3">
             <div class="text-sm font-semibold text-gray-800 mb-1 leading-tight">{{ sku.skuNameCn }}</div>
             <div class="text-xs text-gray-600 mb-2 leading-tight">{{ sku.skuNameEn || 'No English Name' }}</div>
-            <div class="text-base font-bold text-red-600">{{ sku.price_en ? `$${sku.price}` : '-' }}
-            </div>
+            <div class="text-base font-bold text-red-600">{{ sku.price_en ? `$${sku.price_en}` : '-' }}</div>
             <div class="text-base font-bold text-red-600">{{ sku.price ? `¥${sku.price}` : '-' }}</div>
           </div>
         </div>
@@ -232,7 +231,7 @@ async function fanyiSku() {
       if (sku.price) {
         const originalPrice = parseFloat(sku.price)
         sku.price_en = Math.round(originalPrice * 0.43)
-        console.log(`${originalPrice} => ${sku.price}`)
+        console.log(`${originalPrice} => ${sku.price_en}`)
       }
     })
   }
