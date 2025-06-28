@@ -30,16 +30,23 @@
       
       <el-table-column prop="title_cn" label="产品标题" min-width="200" show-overflow-tooltip />
       
-      <el-table-column prop="created_at" label="创建时间" width="180">
+      <el-table-column prop="is_ok" label="核对数据" width="90">
         <template #default="{ row }">
-          {{ formatDate(row.created_at) }}
+            <el-tag v-if="row.is_ok" type="success" class="cursor-pointer" @click="switchIsOk(row)">已核对</el-tag>
+            <el-tag v-else type="info" @click="switchIsOk(row)" class="cursor-pointer">未核对</el-tag>
         </template>
       </el-table-column>
       
-      <el-table-column label="操作" width="180" fixed="right">
+      <el-table-column label="操作" width="290" fixed="right">
         <template #default="{ row }">
           <el-button type="primary" size="small" @click="viewDetail(row)">
-            查看详情
+            查看
+          </el-button>
+          <el-button type="primary" size="small" @click="viewTmallDetail(row)">
+            天猫
+          </el-button>
+          <el-button type="primary" size="small" @click="viewShopifyDetail(row)">
+            独立站
           </el-button>
           <el-button type="danger" size="small" @click="deleteProduct(row)">
             删除
@@ -78,6 +85,33 @@ const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
 
+function viewTmallDetail(row) {
+  const url = `https://detail.tmall.com/item.htm?id=${row.product_id}`
+  window.open(url, '_blank')
+}
+
+function viewShopifyDetail(row) {
+  const url = `https://admin.shopify.com/store/a1jefv-w4/products/${row.shopify_id}`
+  window.open(url, '_blank')
+}
+
+const switchIsOk = async (row) => {
+  let current_is_ok = row.is_ok || 0
+  try {
+    const productId = row.product_id
+    console.log('row :', row);
+    console.log('productId :', productId);
+    const updateData = {
+      ...row,
+      is_ok: current_is_ok == 0 ? 1 : 0
+    }
+    await axios.put(`${window.lx_host}/products/${productId}`, updateData)
+    row.is_ok = !row.is_ok
+  } catch (error) {
+    ElMessage.error('更新失败：' + (error.response?.data?.message || error.message))
+  }
+}
+
 // 获取产品列表
 const fetchProductList = async () => {
   loading.value = true
@@ -114,19 +148,6 @@ const handleSizeChange = (val) => {
 const handleCurrentChange = (val) => {
   currentPage.value = val
   fetchProductList()
-}
-
-// 格式化日期
-const formatDate = (dateString) => {
-  if (!dateString) return ''
-  const date = new Date(dateString)
-  return date.toLocaleString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
 }
 
 // 查看详情

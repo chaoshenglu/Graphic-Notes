@@ -562,3 +562,201 @@ function initialize() {
     // TODO: 在这里添加页面特定的初始化逻辑
   }
 }
+
+// 数字计算气泡功能
+let calculationBubble = null;
+
+// 创建计算气泡
+function createCalculationBubble(x, y, originalNumber, calculatedResult) {
+  // 移除已存在的气泡
+  removeCalculationBubble();
+  
+  // 创建气泡元素
+  calculationBubble = document.createElement('div');
+  calculationBubble.id = 'tmall-calculation-bubble';
+  calculationBubble.style.cssText = `
+    position: fixed;
+    z-index: 10000;
+    background: #333;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: Arial, sans-serif;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    pointer-events: none;
+    max-width: 200px;
+    word-wrap: break-word;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+  `;
+  
+  // 设置气泡内容
+  calculationBubble.innerHTML = `
+    <div style="margin-bottom: 4px; font-weight: bold;">原数字: ${originalNumber}</div>
+    <div style="color: #4CAF50;">计算结果: ${calculatedResult}</div>
+    <div style="font-size: 12px; color: #ccc; margin-top: 4px;">(${originalNumber} ÷ 7 × 3)</div>
+  `;
+  
+  // 添加到页面
+  document.body.appendChild(calculationBubble);
+  
+  // 计算气泡位置，避免超出屏幕边界
+  const bubbleRect = calculationBubble.getBoundingClientRect();
+  let left = x + 10;
+  let top = y - bubbleRect.height - 10;
+  
+  // 检查右边界
+  if (left + bubbleRect.width > window.innerWidth) {
+    left = x - bubbleRect.width - 10;
+  }
+  
+  // 检查上边界
+  if (top < 0) {
+    top = y + 20;
+  }
+  
+  // 检查下边界
+  if (top + bubbleRect.height > window.innerHeight) {
+    top = window.innerHeight - bubbleRect.height - 10;
+  }
+  
+  // 设置最终位置
+  calculationBubble.style.left = left + 'px';
+  calculationBubble.style.top = top + 'px';
+  
+  // 显示气泡
+  setTimeout(() => {
+    if (calculationBubble) {
+      calculationBubble.style.opacity = '1';
+    }
+  }, 10);
+  
+  // 3秒后自动隐藏
+  setTimeout(() => {
+    removeCalculationBubble();
+  }, 3000);
+}
+
+// 移除计算气泡
+function removeCalculationBubble() {
+  if (calculationBubble) {
+    calculationBubble.style.opacity = '0';
+    setTimeout(() => {
+      if (calculationBubble && calculationBubble.parentNode) {
+        calculationBubble.parentNode.removeChild(calculationBubble);
+      }
+      calculationBubble = null;
+    }, 200);
+  }
+}
+
+// 检查文本是否为纯数字（包括整数和浮点数）
+function isPureNumber(text) {
+  const trimmedText = text.trim();
+  // 匹配整数和浮点数，包括负数
+  const numberRegex = /^-?\d+(\.\d+)?$/;
+  return numberRegex.test(trimmedText) && !isNaN(parseFloat(trimmedText));
+}
+
+// 计算数字：除以7再乘以3
+function calculateNumber(number) {
+  const result = (number / 7) * 3;
+  // 保留4位小数，去除末尾的0
+  return parseFloat(result.toFixed(4));
+}
+
+// 处理文本选择事件
+let isTextSelecting = false;
+function handleTextSelection(event) {
+  // 移除之前的气泡
+  removeCalculationBubble();
+  
+  // 获取选中的文本
+  const selection = window.getSelection();
+  const selectedText = selection.toString();
+  
+  // 检查是否有选中文本且为纯数字
+  if (selectedText && isPureNumber(selectedText)) {
+    const number = parseFloat(selectedText.trim());
+    const calculatedResult = calculateNumber(number);
+    
+    // 获取鼠标位置
+    const mouseX = event.clientX || event.pageX;
+    const mouseY = event.clientY || event.pageY;
+    
+    // 标记正在选择文本，避免立即被点击事件隐藏
+    isTextSelecting = true;
+    setTimeout(() => {
+      isTextSelecting = false;
+    }, 500);
+    
+    // 创建并显示计算气泡
+    createCalculationBubble(mouseX, mouseY, selectedText.trim(), calculatedResult);
+  }
+}
+
+// 监听鼠标抬起事件（文本选择完成）
+document.addEventListener('mouseup', handleTextSelection);
+
+// 监听键盘事件（可能通过键盘选择文本）
+document.addEventListener('keyup', function(event) {
+  // 检查是否是可能导致文本选择的按键
+  if (event.key === 'ArrowLeft' || event.key === 'ArrowRight' || 
+      event.key === 'ArrowUp' || event.key === 'ArrowDown' ||
+      event.key === 'Shift' || event.ctrlKey || event.metaKey) {
+    // 延迟一点检查选择，确保选择已完成
+    setTimeout(() => {
+      const selection = window.getSelection();
+      const selectedText = selection.toString();
+      
+      if (selectedText && isPureNumber(selectedText)) {
+        const number = parseFloat(selectedText.trim());
+        const calculatedResult = calculateNumber(number);
+        
+        // 获取选择区域的位置
+        const range = selection.getRangeAt(0);
+        const rect = range.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top;
+        
+        createCalculationBubble(centerX, centerY, selectedText.trim(), calculatedResult);
+      }
+    }, 100);
+  }
+});
+
+// 点击页面其他地方时隐藏气泡（添加延迟避免立即消失）
+let clickTimeout = null;
+document.addEventListener('click', function(event) {
+  // 如果正在选择文本，不处理点击事件
+  if (isTextSelecting) {
+    return;
+  }
+  
+  // 如果点击的不是气泡本身，则延迟隐藏气泡
+  if (calculationBubble && !calculationBubble.contains(event.target)) {
+    // 清除之前的延迟
+    if (clickTimeout) {
+      clearTimeout(clickTimeout);
+    }
+    // 延迟2秒后隐藏，给用户充足时间查看
+    clickTimeout = setTimeout(() => {
+      removeCalculationBubble();
+      clickTimeout = null;
+    }, 2000);
+  }
+});
+
+// 鼠标悬停在气泡上时取消隐藏
+document.addEventListener('mouseover', function(event) {
+  if (calculationBubble && calculationBubble.contains(event.target)) {
+    // 取消点击延迟隐藏
+    if (clickTimeout) {
+      clearTimeout(clickTimeout);
+      clickTimeout = null;
+    }
+  }
+});
+
+console.log('数字计算气泡功能已加载');
