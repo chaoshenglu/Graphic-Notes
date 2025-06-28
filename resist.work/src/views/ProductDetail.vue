@@ -17,7 +17,7 @@
       </h1>
       <div class="flex items-center justify-center gap-4 flex-wrap">
         <h2 class="text-xl font-normal text-gray-600 m-0 leading-relaxed">{{ productData?.title_en || 'No English Title'
-          }}</h2>
+        }}</h2>
         <div class="flex gap-2 items-center">
           <el-button type="primary" :icon="Edit" size="small" circle @click="editTitleEn" title="编辑英文标题"
             class="transition-transform duration-300 hover:scale-110" />
@@ -92,8 +92,8 @@
           class="flex-shrink-0 flex flex-col items-center justify-center w-50 bg-white border-2 border-gray-200 rounded-xl overflow-hidden relative">
           <div class="text-6 absolute top-4px left-4px cursor-pointer w-16px" @click="openSkuEditModal(sku, index)">
             <el-icon>
-            <Edit />
-          </el-icon>
+              <Edit />
+            </el-icon>
           </div>
           <div class="w-full h-48 overflow-hidden flex items-center justify-center">
             <img :src="sku.skuImageUrl" :alt="sku.skuNameCn"
@@ -102,8 +102,10 @@
           <div class="p-3">
             <div class="text-sm font-semibold text-gray-800 mb-1 leading-tight">{{ sku.skuNameCn }}</div>
             <div class="text-xs text-gray-600 mb-2 leading-tight">{{ sku.skuNameEn || 'No English Name' }}</div>
-            <div class="text-base font-bold text-red-600">{{ sku.price_en ? `$${sku.price_en}` : '-' }}</div>
-            <div class="text-base font-bold text-red-600">{{ sku.price ? `¥${sku.price}` : '-' }}</div>
+            <div class="flex">
+              <div class="text-base font-bold text-red-600">{{ sku.price_en ? `$${sku.price_en}` : '-' }}</div>
+              <div class="text-base font-bold text-gray-800 ml-20px">{{ sku.price ? `¥${sku.price}` : '-' }}</div>
+            </div>
           </div>
         </div>
         <div v-if="!productData?.sku_data?.length"
@@ -251,7 +253,7 @@ async function fanyiSku() {
     }
     // 将多个SKU名称用*符号连接成一个句子
     const combinedQuery = skuNamesToTranslate.join('*')
-    
+
     const translatePromise = new Promise((resolve, reject) => {
       translator.translate(
         combinedQuery,
@@ -270,10 +272,10 @@ async function fanyiSku() {
       )
     })
     const translatedText = await translatePromise
-    
+
     // 通过*符号拆分翻译结果
     const translatedNames = translatedText.split('*')
-    
+
     // 创建翻译映射
     const translationMap = {}
     skuNamesToTranslate.forEach((originalName, index) => {
@@ -986,11 +988,11 @@ const synchronizeProductInfoToShopify = async () => {
       updateData.options = updateData_options
       updateData.variants = updateData_variants
     }
-    const response = await axios.put(`http://192.168.1.12:3000/api/products/${shopify_id}`,updateData, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
+    const response = await axios.put(`http://192.168.1.12:3000/api/products/${shopify_id}`, updateData, {
+      headers: {
+        'Content-Type': 'application/json'
       }
+    }
     )
     if (response.data.success) {
       ElMessage.success('商品信息已成功同步到Shopify')
