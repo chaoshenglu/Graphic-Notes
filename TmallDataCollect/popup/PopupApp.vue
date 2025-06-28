@@ -16,6 +16,7 @@
         <textarea class="data-textarea" :value="formatProductData" readonly rows="30"></textarea>
         <div style="display: flex;flex-direction: row;align-items: center;">
           <button class="copy-btn" @click="copyToClipboard">复制</button>
+          <button class="copy-btn" @click="updateSku">update sku</button>
           <button class="copy-btn" @click="uploadData">上传</button>
         </div>
       </div>
@@ -194,56 +195,6 @@ export default {
       }
     }
 
-    // 辅助函数：提取图片URL
-    const extractImageUrl = (img) => {
-      return img.src || img.getAttribute('data-src') || img.getAttribute('data-original') || img.getAttribute('data-lazy');
-    }
-
-    // 辅助函数：验证图片URL
-    const isValidImageUrl = (url) => {
-      return url && (url.startsWith('http') || url.startsWith('//'))
-    }
-
-    // 辅助函数：标准化图片URL
-    const normalizeImageUrl = (url) => {
-      if (url.startsWith('//')) {
-        return 'https:' + url;
-      }
-      return url;
-    }
-
-    // 辅助函数：触发懒加载
-    const triggerLazyLoad = (img) => {
-      const event = new Event('scroll');
-      window.dispatchEvent(event);
-
-      const intersectionEvent = new Event('intersection');
-      img.dispatchEvent(intersectionEvent);
-    }
-
-    // 辅助函数：等待图片加载
-    const waitForImageLoad = (img) => {
-      return new Promise((resolve) => {
-        let attempts = 0;
-        const maxAttempts = 10;
-
-        const checkImage = () => {
-          attempts++;
-          const currentSrc = extractImageUrl(img);
-
-          if (currentSrc && isValidImageUrl(currentSrc)) {
-            resolve();
-          } else if (attempts < maxAttempts) {
-            setTimeout(checkImage, 300);
-          } else {
-            resolve();
-          }
-        };
-
-        checkImage();
-      });
-    }
-
     const handleCollect = async () => {
       try {
         isCollecting.value = true
@@ -310,6 +261,10 @@ export default {
           }
         }, 3000)
       }
+    }
+
+    function updateSku() {
+      
     }
 
     return {
