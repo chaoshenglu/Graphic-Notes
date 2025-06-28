@@ -1,4 +1,4 @@
-export default {
+module.exports = {
   apps: [{
     name: 'express-shopify-api',
     script: 'server.js',
