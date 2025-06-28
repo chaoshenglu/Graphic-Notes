@@ -268,7 +268,7 @@ export default {
       参考代码：
       const updateData = {
       ...productData.value,
-      title_en: newTitleEn
+      sku_data: sku_data
     }
 await axios.put(`https://api.tiffanylamps.com.cn/products/${productId}`, updateData)
       */
