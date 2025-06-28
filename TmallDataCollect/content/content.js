@@ -661,9 +661,7 @@ function isPureNumber(text) {
 
 // 计算数字：除以7再乘以3
 function calculateNumber(number) {
-  const result = (number / 7) * 3;
-  // 保留4位小数，去除末尾的0
-  return parseFloat(result.toFixed(4));
+  return Math.round(number * 0.43);
 }
 
 // 处理文本选择事件
