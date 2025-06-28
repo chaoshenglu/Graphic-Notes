@@ -347,7 +347,7 @@ const synchronizeSkuToShopify = async () => {
     }
     console.log('updateData :', updateData);
     const response = await axios.put(
-      `http://localhost:3000/api/products/${shopify_id}`,
+      `http://192.168.1.12:3000/api/products/${shopify_id}`,
       updateData,
       {
         headers: {
@@ -906,7 +906,7 @@ const synchronizeProductHtmlToShopify = async () => {
     }
     console.log('updateData :', updateData);
     const response = await axios.put(
-      `http://localhost:3000/api/products/${shopify_id}`,
+      `http://192.168.1.12:3000/api/products/${shopify_id}`,
       updateData,
       {
         headers: {
@@ -987,7 +987,7 @@ const synchronizeProductInfoToShopify = async () => {
       updateData.options = updateData_options
       updateData.variants = updateData_variants
     }
-    const response = await axios.put(`http://localhost:3000/api/products/${shopify_id}`,updateData, {
+    const response = await axios.put(`http://192.168.1.12:3000/api/products/${shopify_id}`,updateData, {
         headers: {
           'Content-Type': 'application/json'
         }
