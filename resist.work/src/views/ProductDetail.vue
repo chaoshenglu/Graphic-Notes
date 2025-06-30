@@ -87,7 +87,7 @@
             class="transition-transform duration-300 hover:scale-110 disabled:hover:scale-100" />
         </div>
       </div>
-      <div class="flex gap-4 overflow-x-auto py-4">
+      <div class="flex flex-wrap gap-4 py-4">
         <div v-for="(sku, index) in productData?.sku_data || []" :key="index"
           class="flex-shrink-0 flex flex-col items-center justify-center w-50 bg-white border-2 border-gray-200 rounded-xl overflow-hidden relative">
           <div class="text-6 absolute top-4px left-4px cursor-pointer w-16px" @click="openSkuEditModal(sku, index)">
