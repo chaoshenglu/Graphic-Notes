@@ -120,7 +120,7 @@
           style="border-bottom: 2px solid #007bff;">详情图片</h3>
         <el-button type="primary" @click="syncImagesToCloudflare" :loading="uploading">同步图片到Cloudflare</el-button>
       </div>
-      <div class="flex gap-4 overflow-x-auto py-3">
+      <div class="flex gap-4 flex-wrap py-3">
         <div v-for="(image, index) in productData?.detail_images_cn || []" :key="index"
           class="flex-shrink-0 w-50 h-50 rounded-lg overflow-hidden transition-transform duration-300 relative cursor-pointer hover:scale-102 group">
           <img :src="image" :alt="`详情图 ${index + 1}`" class="w-full h-full object-cover" />
