@@ -687,7 +687,7 @@ const downloadAllSkuImages = async () => {
     for (let i = 0; i < skuData.length; i++) {
       const sku = skuData[i]
       if (sku.skuImageUrl) {
-        const filename = `${i + 1}.【${sku.skuNameEn}】${sku.price}.jpg`
+        const filename = `${i + 1}.【${sku.skuNameEn}】${sku.price_en}.jpg`
         await downloadImage(sku.skuImageUrl, filename)
         if (i < skuData.length - 1) {
           await new Promise(resolve => setTimeout(resolve, 500))
