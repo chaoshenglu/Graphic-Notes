@@ -86,7 +86,7 @@ const generateHtmlCode = () => {
   // 生成图片链接数组
   const imageUrls = []
   for (let i = 1; i <= count; i++) {
-    imageUrls.push(`https://tiffanylamps.art/${id}/detail/${i}.webp`)
+    imageUrls.push(`https://img.tiffanylamps.art/${id}/detail/${i}.webp`)
   }
   
   // 生成img标签

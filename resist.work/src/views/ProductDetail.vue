@@ -751,16 +751,16 @@ const generateDetailImagesHtml = () => {
   const count = productData.value.detail_images_cn.length || []
   const imageUrls = []
   for (let i = 1; i <= count; i++) {
-    imageUrls.push(`https://tiffanylamps.art/${id}/detail/${i}.webp`)
+    imageUrls.push(`https://img.tiffanylamps.art/${id}/detail/${i}.webp`)
   }
-  imageUrls.push('https://tiffanylamps.art/bottom.webp')
+  imageUrls.push('https://img.tiffanylamps.art/bottom.webp')
   if (productData.value.cate == 'Floor Lamp') {
-    imageUrls.push('https://tiffanylamps.art/floor-lamp-switch.webp')
+    imageUrls.push('https://img.tiffanylamps.art/floor-lamp-switch.webp')
   } else if (productData.value.cate == 'Not decided') {
-    imageUrls.push('https://tiffanylamps.art/floor-lamp-switch.webp')
-    imageUrls.push('https://tiffanylamps.art/not-floor-lamp-switch.webp')
+    imageUrls.push('https://img.tiffanylamps.art/floor-lamp-switch.webp')
+    imageUrls.push('https://img.tiffanylamps.art/not-floor-lamp-switch.webp')
   } else {
-    imageUrls.push('https://tiffanylamps.art/not-floor-lamp-switch.webp')
+    imageUrls.push('https://img.tiffanylamps.art/not-floor-lamp-switch.webp')
   }
   const imgTags = imageUrls.map(url => `  <img src="${url}">`).join('\n')
   return `<div style="display: flex;flex-direction: column;border-radius: 8px;box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);overflow: hidden;">\n${imgTags}\n</div>`
