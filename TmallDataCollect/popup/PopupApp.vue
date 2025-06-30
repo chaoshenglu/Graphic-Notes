@@ -234,6 +234,7 @@ export default {
             detail_images_cn: result.data.detailImages,
             main_images_cn: result.data.mainImages,
             param_info_cn: result.data.htmlContent,
+            video_url:result.data.video_url,
             sku_data: result.data.skuData || []
           }
 

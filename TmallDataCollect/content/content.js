@@ -79,33 +79,39 @@ async function collectAllData() {
   const data = {
     productId: null,
     title: null,
+    video_url: null,
     mainImages: [],
     detailImages: [],
     htmlContent: '',
     skuData: []
   };
 
-  // 1. 采集商品ID
+  // 1. 采集商品视频（优先执行，其他任务等待完成）
+  data.video_url = await collectProductVideo();
+  console.log('采集到商品视频:', data.video_url);
+  console.log('视频采集任务已完成，开始执行其他采集任务...');
+
+  // 2. 采集商品ID
   data.productId = collectProductId();
   console.log('采集到商品ID:', data.productId);
 
-  // 2. 采集商品标题
+  // 3. 采集商品标题
   data.title = collectProductTitle();
   console.log('采集到商品标题:', data.title);
 
-  // 3. 采集商品主图
+  // 4. 采集商品主图
   data.mainImages = await collectMainImages();
   console.log('采集到主图:', data.mainImages);
 
-  // 4. 采集商品细节图
+  // 5. 采集商品细节图
   data.detailImages = await collectDetailImages();
   console.log('采集到细节图:', data.detailImages);
 
-  // 5. 采集商品参数
+  // 6. 采集商品参数
   data.htmlContent = collectProductParameters();
   console.log('采集到产品参数HTML');
 
-  // 6. 采集SKU数据
+  // 7. 采集SKU数据
   data.skuData = await collectSkuData(data.mainImages);
   console.log('采集到SKU数据:', data.skuData);
 
@@ -133,6 +139,60 @@ function collectProductTitle() {
   let productTitle = document.title.replace(/[\\/:*?"<>|]/g, '_').substring(0, 50);
   productTitle = productTitle.replace("-tmall.com天猫","")
   return productTitle;
+}
+
+// 采集商品视频
+async function collectProductVideo() {
+  return new Promise((resolve) => {
+    try {
+      console.log('开始采集商品视频...');
+      
+      // 查找页面中的所有video标签
+      const videoElements = document.querySelectorAll('video');
+      
+      if (videoElements.length === 0) {
+        console.log('页面中未找到video标签');
+        resolve(null);
+        return;
+      }
+      
+      console.log(`找到 ${videoElements.length} 个video标签，取第一个`);
+      
+      // 取第一个video标签
+      const firstVideo = videoElements[0];
+      let videoSrc = firstVideo.src;
+      
+      // 如果src为空，尝试从source子元素获取
+      if (!videoSrc) {
+        const sourceElement = firstVideo.querySelector('source');
+        if (sourceElement) {
+          videoSrc = sourceElement.src;
+        }
+      }
+      
+      if (!videoSrc) {
+        console.log('video标签中未找到有效的src地址');
+        resolve(null);
+        return;
+      }
+
+      // 如果地址不以https://开头，则补齐
+      if (!videoSrc.startsWith('https://')) {
+        if (videoSrc.startsWith('//')) {
+          videoSrc = 'https:' + videoSrc;
+        } else if (videoSrc.startsWith('/')) {
+          videoSrc = 'https:/' + videoSrc;
+        } else {
+          videoSrc = 'https://' + videoSrc;
+        }
+      }
+      console.log('最终视频地址:', videoSrc);
+      resolve(videoSrc);
+    } catch (error) {
+      console.error('采集商品视频失败:', error);
+      resolve(null);
+    }
+  });
 }
 
 // 采集主图
