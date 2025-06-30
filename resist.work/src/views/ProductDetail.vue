@@ -5,9 +5,9 @@
         预览product_html
       </el-button>
       <el-button class="mt-6px ml-12px" v-else @click="previewProductHtml">product_html为空</el-button>
-      <el-button class="mt-10px" @click="synchronizeProductInfoToShopify">同步商品到shopify</el-button>
       <el-button class="mt-10px" @click="synchronizeSkuToShopify">同步sku到shopify</el-button>
       <el-button class="mt-10px" @click="synchronizeProductHtmlToShopify">同步细节图到shopify</el-button>
+      <el-button class="mt-10px" @click="synchronizeProductInfoToShopify">全部同步到shopify</el-button>
     </div>
     <div class="flex" style="position: fixed;top:100px;left:320px;cursor: pointer;">
       <img src="/src/assets/back.svg" @click="backToList">
