@@ -125,7 +125,7 @@ watch(() => props.modelValue, (newVal) => {
     Object.assign(formData, {
       skuNameCn: props.skuData.skuNameCn || '',
       skuNameEn: props.skuData.skuNameEn || '',
-      price: props.skuData.price || null,
+      price: props.skuData.price ? Number(props.skuData.price) : null,
       skuImageUrl: props.skuData.skuImageUrl || ''
     })
   }
