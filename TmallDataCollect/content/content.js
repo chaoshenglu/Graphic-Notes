@@ -567,7 +567,7 @@ async function collectSkuData(mainImages) {
         div.click();
         
         // 等待页面更新价格信息
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 900));
         
         // 采集券后价格
         let price = null;
@@ -653,11 +653,12 @@ function createCalculationBubble(x, y, originalNumber, calculatedResult) {
     font-size: 14px;
     font-family: Arial, sans-serif;
     box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-    pointer-events: none;
+    pointer-events: auto;
     max-width: 200px;
     word-wrap: break-word;
     opacity: 0;
     transition: opacity 0.2s ease-in-out;
+    cursor: pointer;
   `;
   
   // 设置气泡内容
@@ -700,11 +701,6 @@ function createCalculationBubble(x, y, originalNumber, calculatedResult) {
       calculationBubble.style.opacity = '1';
     }
   }, 10);
-  
-  // 3秒后自动隐藏
-  setTimeout(() => {
-    removeCalculationBubble();
-  }, 3000);
 }
 
 // 移除计算气泡
@@ -793,36 +789,16 @@ document.addEventListener('keyup', function(event) {
   }
 });
 
-// 点击页面其他地方时隐藏气泡（添加延迟避免立即消失）
-let clickTimeout = null;
+// 点击气泡时隐藏气泡
 document.addEventListener('click', function(event) {
   // 如果正在选择文本，不处理点击事件
   if (isTextSelecting) {
     return;
   }
   
-  // 如果点击的不是气泡本身，则延迟隐藏气泡
-  if (calculationBubble && !calculationBubble.contains(event.target)) {
-    // 清除之前的延迟
-    if (clickTimeout) {
-      clearTimeout(clickTimeout);
-    }
-    // 延迟2秒后隐藏，给用户充足时间查看
-    clickTimeout = setTimeout(() => {
-      removeCalculationBubble();
-      clickTimeout = null;
-    }, 2000);
-  }
-});
-
-// 鼠标悬停在气泡上时取消隐藏
-document.addEventListener('mouseover', function(event) {
+  // 如果点击的是气泡本身，则隐藏气泡
   if (calculationBubble && calculationBubble.contains(event.target)) {
-    // 取消点击延迟隐藏
-    if (clickTimeout) {
-      clearTimeout(clickTimeout);
-      clickTimeout = null;
-    }
+    removeCalculationBubble();
   }
 });
 

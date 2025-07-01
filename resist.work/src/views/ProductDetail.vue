@@ -4,7 +4,7 @@
       <el-button class="mt-6px ml-12px" v-if="productData && productData.product_html" @click="previewProductHtml">
         预览product_html
       </el-button>
-      <el-button class="mt-6px ml-12px" v-else @click="previewProductHtml">product_html为空</el-button>
+      <el-button class="mt-6px ml-12px" v-else @click="previewProductHtml" type="danger">product_html为空</el-button>
       <el-button class="mt-10px" @click="synchronizeSkuToShopify">同步sku到shopify</el-button>
       <el-button class="mt-10px" @click="synchronizeProductHtmlToShopify">同步细节图到shopify</el-button>
       <el-button class="mt-10px" @click="synchronizeProductInfoToShopify">全部同步到shopify</el-button>
