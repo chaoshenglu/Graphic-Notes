@@ -503,6 +503,15 @@ async function collectSkuData(mainImages) {
 
     const skuData = [];
 
+    for (let index = 0; index < valueItemDivs.length; index++) {
+      const div = valueItemDivs[index];
+      const spanElement = div.querySelector('span[title]');
+      const skuNameCn = spanElement.getAttribute('title');
+        if (skuNameCn == '按钮开关'){
+          div.click();
+        }
+    }
+
     // 依次点击每个valueItem元素并采集价格
     for (let index = 0; index < valueItemDivs.length; index++) {
       const div = valueItemDivs[index];
@@ -523,7 +532,7 @@ async function collectSkuData(mainImages) {
         }
 
         const skuNameCn = spanElement.getAttribute('title');
-        if (!skuNameCn) {
+        if (!skuNameCn || skuNameCn == '按钮开关') {
           console.warn(`第 ${index + 1} 个valueItem元素的span没有title属性`);
           continue;
         }
