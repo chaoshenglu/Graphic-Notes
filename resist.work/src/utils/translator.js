@@ -5,7 +5,7 @@ class BaiduTranslator {
     constructor(appid, key) {
         this.appid = appid || '20231111001876991';
         this.key = key || 'UB9vfVGZDpO9fLod_TOy';
-        this.apiUrl = 'http://api.fanyi.baidu.com/api/trans/vip/translate';
+        this.apiUrl = 'https://api.fanyi.baidu.com/api/trans/vip/translate';
     }
 
     /**
