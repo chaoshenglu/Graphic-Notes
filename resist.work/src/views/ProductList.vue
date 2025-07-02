@@ -7,8 +7,8 @@
             <img src="/src/assets/tmall.webp" style="width: 100px;">
             <el-input
               v-model="searchQuery"
-              placeholder="搜索商品名称..."
-              class="w-80"
+              style="flex-shrink:0;"
+              placeholder="搜索商品名称/product_id/shopify_id"
               clearable
               @input="handleSearch"
             >
