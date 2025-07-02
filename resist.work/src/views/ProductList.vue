@@ -97,7 +97,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -111,12 +111,33 @@ const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
 
+// 搜索防抖定时器
+let searchTimer = null
+
+// 搜索功能 - 支持商品名称/product_id/shopify_id搜索
 function handleSearch() {
-//拼接参数“keyword”
+  // 清除之前的定时器
+  if (searchTimer) {
+    clearTimeout(searchTimer)
+  }
+  
+  // 设置防抖，500ms后执行搜索
+  searchTimer = setTimeout(() => {
+    // 重置到第一页
+    currentPage.value = 1
+    // 重新获取产品列表
+    fetchProductList()
+  }, 500)
 }
 
+// 刷新产品列表
 function refreshProducts() {
-
+  // 清空搜索条件
+  searchQuery.value = ''
+  // 重置到第一页
+  currentPage.value = 1
+  // 重新获取产品列表
+  fetchProductList()
 }
 
 function viewTmallDetail(row) {
@@ -150,11 +171,18 @@ const switchIsOk = async (row) => {
 const fetchProductList = async () => {
   loading.value = true
   try {
+    const params = {
+      page: currentPage.value,
+      limit: pageSize.value
+    }
+    
+    // 如果有搜索关键词，添加到参数中
+    if (searchQuery.value && searchQuery.value.trim()) {
+      params.keyword = searchQuery.value.trim()
+    }
+    
     const response = await axios.get(`${window.lx_host}/products`, {
-      params: {
-        page: currentPage.value,
-        limit: pageSize.value
-      }
+      params
     })
     
     if (response.data.success) {
@@ -249,6 +277,14 @@ const deleteProduct = (row) => {
 onMounted(() => {
   document.title = 'Hauty商品列表'
   fetchProductList()
+})
+
+// 组件卸载时清理定时器
+onUnmounted(() => {
+  if (searchTimer) {
+    clearTimeout(searchTimer)
+    searchTimer = null
+  }
 })
 </script>
 
