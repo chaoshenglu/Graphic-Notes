@@ -62,7 +62,7 @@
         <h3 class="text-20px font-semibold text-gray-900 m-0 pb-2 inline-block"
           style="border-bottom: 2px solid #007bff;">主图</h3>
         <div class="flex">
-          <el-button v-if="productData && productData.video_url" type="primary" size="small" @click="downloadVideo">视频</el-button>
+          <el-button v-if="productData && productData.video_url" type="primary" size="small" @click="previewVideo">视频</el-button>
           <el-button type="primary" :icon="Download" size="small" circle @click="downloadAllMainImages" title="下载全部主图"
             :disabled="!productData?.main_images_cn?.length"
             class="transition-transform duration-300 hover:scale-110 disabled:hover:scale-100" />
@@ -229,6 +229,10 @@ const savingHtml = ref(false)
 const editingLanguage = ref('cn') // 'cn' 表示编辑中文，'en' 表示编辑英文
 const showProductHtmlEditModal = ref(false)
 const editingProductHtmlContent = ref('')
+
+function previewVideo() {
+window.open(productData.value.video_url,'_blank')
+}
 
 async function downloadVideo() {
   if (!productData.value.video_url) {
@@ -700,6 +704,7 @@ const downloadImage = async (imageUrl, filename) => {
 }
 
 const downloadAllMainImages = async () => {
+  downloadVideo()
   const mainImages = productData.value?.main_images_cn
   if (!mainImages || mainImages.length === 0) {
     ElMessage.warning('暂无主图可下载')
