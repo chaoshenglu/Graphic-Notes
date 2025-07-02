@@ -1,5 +1,31 @@
 <template>
   <div class="product-list">
+    <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
+        <div class="flex justify-between items-center">
+          <div class="flex items-center space-x-4">
+            <!-- <span class="font-bold text-#ff0b31" style="flex-shrink:0;">天猫</span> -->
+            <img src="/src/assets/tmall.webp" style="width: 100px;">
+            <el-input
+              v-model="searchQuery"
+              placeholder="搜索商品名称..."
+              class="w-80"
+              clearable
+              @input="handleSearch"
+            >
+              <template #prefix>
+                <i class="i-carbon-search text-gray-400"></i>
+              </template>
+            </el-input>
+            <el-button type="primary" @click="refreshProducts" :loading="loading">
+              <i class="i-carbon-restart mr-2"></i>
+              刷新
+            </el-button>
+          </div>
+          <div class="text-sm text-gray-500">
+            共 {{ total }} 个商品
+          </div>
+        </div>
+      </div>
     <el-table 
       :data="productList" 
       v-loading="loading"
@@ -77,13 +103,21 @@ import axios from 'axios'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 const router = useRouter()
-
+const searchQuery = ref('')
 // 响应式数据
 const productList = ref([])
 const loading = ref(false)
 const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
+
+function handleSearch() {
+
+}
+
+function refreshProducts() {
+
+}
 
 function viewTmallDetail(row) {
   const url = `https://detail.tmall.com/item.htm?id=${row.product_id}`
