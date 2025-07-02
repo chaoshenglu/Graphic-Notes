@@ -231,12 +231,11 @@ const showProductHtmlEditModal = ref(false)
 const editingProductHtmlContent = ref('')
 
 function previewVideo() {
-window.open(productData.value.video_url,'_blank')
+  window.open(productData.value.video_url,'_blank')
 }
 
 async function downloadVideo() {
   if (!productData.value.video_url) {
-    alert('视频链接不存在')
     return
   }
   
