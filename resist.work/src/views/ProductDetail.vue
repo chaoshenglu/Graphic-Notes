@@ -863,6 +863,7 @@ const cleanTitleAttributes = async () => {
     newContent = newContent.replace("豪蒂（家装灯饰）", "Hauty")
     newContent = newContent.replace("豪蒂", "Hauty")
     newContent = newContent.replace("10年", "3年")
+    newContent = newContent.replace("5年", "3年")
     newContent = newContent.replace("其他/other", "")
     // 使用API接口整理数据：
     try {
