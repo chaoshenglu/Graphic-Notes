@@ -532,7 +532,7 @@ const translateParamHtml = async () => {
           {
             content: [
               {
-                text: `请将下面的代码中的中文翻译成英文(翻译后按原代码格式返回，不要使用 Markdown 格式)：${cleanedParamInfoCn}`,
+                text: `请将下面的代码中的中文翻译成英文，请注意'彩色玻璃'要翻译成'Stained Glass'(翻译后按原代码格式返回，不要使用 Markdown 格式)：${cleanedParamInfoCn}`,
                 type: 'text'
               }
             ],
