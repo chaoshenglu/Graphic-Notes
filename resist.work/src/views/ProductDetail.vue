@@ -17,7 +17,7 @@
       </h1>
       <div class="flex items-center justify-center gap-4 flex-wrap">
         <h2 class="text-xl font-normal text-gray-600 m-0 leading-relaxed">{{ productData?.title_en || 'No English Title'
-          }}</h2>
+        }}</h2>
         <div class="flex gap-2 items-center">
           <el-button type="primary" :icon="Edit" size="small" circle @click="editTitleEn" title="编辑英文标题"
             class="transition-transform duration-300 hover:scale-110" />
@@ -62,7 +62,8 @@
         <h3 class="text-20px font-semibold text-gray-900 m-0 pb-2 inline-block"
           style="border-bottom: 2px solid #007bff;">主图</h3>
         <div class="flex">
-          <el-button v-if="productData && productData.video_url" type="primary" size="small" @click="previewVideo">视频</el-button>
+          <el-button v-if="productData && productData.video_url" type="primary" size="small"
+            @click="previewVideo">视频</el-button>
           <el-button type="primary" :icon="Download" size="small" circle @click="downloadAllMainImages" title="下载全部主图"
             :disabled="!productData?.main_images_cn?.length"
             class="transition-transform duration-300 hover:scale-110 disabled:hover:scale-100" />
@@ -85,6 +86,7 @@
           style="border-bottom: 2px solid #007bff;">规格选择【{{ productData.sku_data.length }}】</h3>
         <div class="flex">
           <el-button type="primary" size="small" @click="fanyiSku">翻译</el-button>
+          <el-button type="primary" size="small" @click="updateEnPrice">美元</el-button>
           <el-button type="primary" :icon="Download" size="small" circle @click="downloadAllSkuImages" title="下载全部SKU图片"
             :disabled="!productData?.sku_data?.length"
             class="transition-transform duration-300 hover:scale-110 disabled:hover:scale-100" />
@@ -231,47 +233,65 @@ const showProductHtmlEditModal = ref(false)
 const editingProductHtmlContent = ref('')
 
 function previewVideo() {
-  window.open(productData.value.video_url,'_blank')
+  window.open(productData.value.video_url, '_blank')
 }
 
 async function downloadVideo() {
   if (!productData.value.video_url) {
     return
   }
-  
+
   try {
     // 显示下载提示
     const loadingToast = document.createElement('div')
     loadingToast.textContent = '正在下载视频...'
     loadingToast.style.cssText = 'position:fixed;top:20px;right:20px;background:#333;color:white;padding:10px;border-radius:5px;z-index:9999'
     document.body.appendChild(loadingToast)
-    
+
     // 获取视频文件
     const response = await fetch(productData.value.video_url)
     if (!response.ok) {
       throw new Error('下载失败')
     }
-    
+
     const blob = await response.blob()
-    
+
     // 创建下载链接
     const url = window.URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
     a.download = `${productData.value.product_id}`
-    
+
     // 触发下载
     document.body.appendChild(a)
     a.click()
-    
+
     // 清理
     document.body.removeChild(a)
     window.URL.revokeObjectURL(url)
     document.body.removeChild(loadingToast)
-    
+
   } catch (error) {
     console.error('下载视频失败:', error)
     alert('下载视频失败，请检查网络连接或视频链接是否有效')
+  }
+}
+
+async function updateEnPrice() {
+  if (productData.value?.sku_data && productData.value.sku_data.length > 0) {
+    productData.value.sku_data.forEach(sku => {
+      if (sku.price) {
+        const originalPrice = parseFloat(sku.price)
+        sku.price_en = Math.round(originalPrice * 0.43)
+        console.log(`${originalPrice} => ${sku.price_en}`)
+      }
+    })
+    const productId = route.params.id
+    const updateData = {
+      ...productData.value
+    }
+    await axios.put(`${window.lx_host}/products/${productId}`, updateData)
+    ElMessage.success('美元价格已更新')
   }
 }
 

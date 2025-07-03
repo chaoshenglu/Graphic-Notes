@@ -508,7 +508,13 @@ async function collectSkuData(mainImages) {
       const spanElement = div.querySelector('span[title]');
       const skuNameCn = spanElement.getAttribute('title');
         if (skuNameCn == '按钮开关'){
-          div.click();
+          const hasSelectedClass = Array.from(div.classList).some(className => className.includes('isSelected'));
+          if (hasSelectedClass){
+            console.log('已选中按钮开关')
+          }else{
+            console.log('现在选中按钮开关')
+            div.click();
+          }
         }
     }
 
