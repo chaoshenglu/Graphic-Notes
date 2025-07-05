@@ -157,6 +157,8 @@
         <div class="flex">
           <el-button type="primary" @click="deleteSuffixImages(17)"
             :loading="uploading">删除最后17张</el-button>
+          <el-button type="primary" @click="deleteSuffixImages(7)"
+            :loading="uploading">删除最后7张</el-button>
           <el-button type="primary" @click="deleteSuffixImages(4)"
             :loading="uploading">删除最后4张</el-button>
           <el-button type="primary" @click="handleSyncImagesToCloudflare"
