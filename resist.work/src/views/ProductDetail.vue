@@ -155,7 +155,9 @@
         <h3 class="text-20px font-semibold text-gray-900 m-0 pb-2 inline-block"
           style="border-bottom: 2px solid #007bff;">详情图片</h3>
         <div class="flex">
-          <el-button type="primary" @click="deleteSuffixImages"
+          <el-button type="primary" @click="deleteSuffixImages(17)"
+            :loading="uploading">删除最后17张</el-button>
+          <el-button type="primary" @click="deleteSuffixImages(4)"
             :loading="uploading">删除最后4张</el-button>
           <el-button type="primary" @click="handleSyncImagesToCloudflare"
             :loading="uploading">同步图片到Cloudflare</el-button>
@@ -658,28 +660,28 @@ const synchronizeProductInfoToShopify = async () => {
   await axios.put(`${window.lx_host}/products/${productId}`, updateData)
 }
 
-const deleteSuffixImages = async () => {
+const deleteSuffixImages = async (count) => {
   if (!productData.value?.detail_images_cn || productData.value.detail_images_cn.length === 0) {
     ElMessage.warning('暂无图片可删除')
     return
   }
   
   const currentLength = productData.value.detail_images_cn.length
-  if (currentLength <= 4) {
-    ElMessage.warning('图片数量不足4张，无法删除最后4张')
+  if (currentLength <= count) {
+    ElMessage.warning(`图片数量不足${count}张`)
     return
   }
   
   try {
-    // 删除最后4个元素
+    // 删除最后count个元素
     const newDetailImages = [...productData.value.detail_images_cn]
-    newDetailImages.splice(-4, 4)
+    newDetailImages.splice(-count, count)
     const updateData = {
       detail_images_cn: newDetailImages
     }
     await axios.put(`${window.lx_host}/products/${route.params.id}`, updateData)
     productData.value.detail_images_cn = newDetailImages
-    ElMessage.success(`成功删除最后4张图片，剩余${newDetailImages.length}张图片`)
+    ElMessage.success(`成功删除最后${count}张图片，剩余${newDetailImages.length}张图片`)
   } catch (error) {
     console.error('删除图片失败:', error)
     ElMessage.error('删除图片失败：' + (error.response?.data?.message || error.message))
