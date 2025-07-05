@@ -16,7 +16,8 @@
         <textarea class="data-textarea" :value="formatProductData" readonly rows="30"></textarea>
         <div style="display: flex;flex-direction: row;align-items: center;">
           <button class="copy-btn" @click="copyToClipboard">复制</button>
-          <button class="copy-btn" @click="updateSku">update sku</button>
+          <button class="copy-btn" @click="updateSku">sku</button>
+          <button class="copy-btn" @click="updateVideoUrl">video</button>
           <button class="copy-btn" @click="uploadData">上传</button>
         </div>
       </div>
@@ -264,6 +265,84 @@ export default {
       }
     }
 
+    const updateVideoUrl = async () => {
+      if (!productData.value || !productData.value.product_id) {
+        statusText.value = '没有可更新的商品数据'
+        statusClass.value = 'ready'
+        return
+      }
+
+      try {
+        statusText.value = '正在采集视频URL...'
+        statusClass.value = 'collecting'
+        
+        // 检查当前标签页是否为天猫页面
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
+        if (!tab.url.includes('tmall.com')) {
+          throw new Error('请在天猫商品详情页使用此功能')
+        }
+
+        // 调用content script采集视频URL
+        const videoResult = await new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            reject(new Error('视频采集超时'))
+          }, 10000)
+
+          chrome.tabs.sendMessage(tab.id, { action: 'collectVideo' }, (response) => {
+            clearTimeout(timeout)
+            if (chrome.runtime.lastError) {
+              reject(new Error(chrome.runtime.lastError.message))
+            } else {
+              resolve(response)
+            }
+          })
+        })
+
+        // 更新productData中的video_url
+        if (videoResult && videoResult.video_url) {
+          productData.value.video_url = videoResult.video_url
+          statusText.value = '正在更新video_url到服务器...'
+        } else {
+          statusText.value = '未采集到视频URL，使用现有数据更新...'
+        }
+
+        const productId = productData.value.product_id
+        const updateData = {
+          video_url: productData.value.video_url || ''
+        }
+        const response = await axios.put(`https://api.tiffanylamps.com.cn/products/${productId}`, updateData)
+        const { data } = response
+        if (data.success) {
+          statusText.value = 'video_url更新成功'
+          statusClass.value = 'success'
+          saveDataToLocalStorage(productData.value)
+        } else {
+          statusText.value = `video_url更新失败：${data.message || '未知错误'}`
+          statusClass.value = 'ready'
+        }
+      } catch (error) {
+        console.error('video_url更新失败:', error)
+        let errorMessage = '网络错误'
+        
+        if (error.response && error.response.data && error.response.data.message) {
+          errorMessage = error.response.data.message
+        } else if (error.message) {
+          errorMessage = error.message
+        }
+        
+        statusText.value = `video_url更新失败：${errorMessage}`
+        statusClass.value = 'ready'
+      } finally {
+        // 3秒后重置状态文本
+        setTimeout(() => {
+          if (statusText.value.includes('video_url更新成功') || statusText.value.includes('video_url更新失败')) {
+            statusText.value = '准备就绪'
+            statusClass.value = 'ready'
+          }
+        }, 3000)
+      }
+    }
+
     const updateSku = async () => {
       if (!productData.value || !productData.value.product_id) {
         statusText.value = '没有可更新的商品数据'
@@ -320,7 +399,8 @@ export default {
       handleCollect,
       copyToClipboard,
       uploadData,
-      updateSku
+      updateSku,
+      updateVideoUrl
     }
   }
 }
@@ -355,8 +435,7 @@ export default {
 }
 
 .status {
-  padding: 8px 12px;
-  border-radius: 6px;
+  padding: 2px;
   font-size: 12px;
   font-weight: 500;
   text-align: center;
@@ -364,19 +443,14 @@ export default {
 }
 
 .status.ready {
-  background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #28a745;
 }
 
 .status.collecting {
-  background: rgba(255, 193, 7, 0.2);
-  border: 1px solid rgba(255, 193, 7, 0.5);
   color: #ffc107;
 }
 
 .status.success {
-  background: rgba(40, 167, 69, 0.2);
-  border: 1px solid rgba(40, 167, 69, 0.5);
   color: #28a745;
 }
 

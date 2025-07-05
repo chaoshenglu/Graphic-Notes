@@ -29,6 +29,30 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
     // 返回true表示异步响应
     return true;
+  } else if (request.action === 'collectVideo') {
+    console.log('收到视频采集请求');
+
+    // 立即返回true表示异步响应
+    (async () => {
+      try {
+        const videoUrl = await collectProductVideo();
+        sendResponse({
+          success: true,
+          message: '视频采集成功',
+          video_url: videoUrl
+        });
+      } catch (error) {
+        console.error('视频采集失败:', error);
+        sendResponse({
+          success: false,
+          error: error.message,
+          video_url: null
+        });
+      }
+    })();
+
+    // 返回true表示异步响应
+    return true;
   } else if (request.action === 'getProductId') {
     // 新增：获取商品ID的功能
     try {
@@ -465,6 +489,13 @@ async function processLazyLoadImages(images) {
     // 等待图片加载
     await waitForImageLoad(img);
 
+    // 检查图片高度，过滤掉高度小于或等于2px的图片
+    const imgHeight = img.offsetHeight || img.clientHeight || img.getBoundingClientRect().height;
+    if (imgHeight <= 2) {
+      console.log(`第 ${i + 1} 个图片高度为 ${imgHeight}px，跳过采集`);
+      continue;
+    }
+
     // 尝试多种方式获取图片URL
     let imageUrl = extractImageUrl(img);
 
@@ -474,7 +505,7 @@ async function processLazyLoadImages(images) {
           console.log('这张图是分隔线，不要采集');
         } else {
           imageUrls.push(imageUrl);
-          console.log(`成功获取第 ${imageUrls.length} 个图片URL: ${imageUrl}`);
+          console.log(`成功获取第 ${imageUrls.length} 个图片URL: ${imageUrl} (高度: ${imgHeight}px)`);
         }
       }
     } else {
@@ -539,7 +570,7 @@ async function collectSkuData(mainImages) {
 
         const skuNameCn = spanElement.getAttribute('title');
         if (!skuNameCn || skuNameCn == '按钮开关') {
-          console.warn(`第 ${index + 1} 个valueItem元素的span没有title属性`);
+          console.log(`第 ${index + 1} 个valueItem元素的span没有title属性`);
           continue;
         }
 

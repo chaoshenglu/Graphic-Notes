@@ -1,27 +1,56 @@
 <template>
   <div class="max-w-6xl mx-auto p-5 font-sans">
-    <div class="fixed left-5px top-100px flex flex-col">
-      <el-button class="mt-6px ml-12px" v-if="productData && productData.product_html" @click="previewProductHtml">
+    <div class="fixed left-5px top-100px flex flex-col" v-if="productData">
+      <el-button class="mt-6px ml-12px" v-if="productData.product_html" @click="previewProductHtml">
         预览product_html
       </el-button>
       <el-button class="mt-6px ml-12px" v-else @click="previewProductHtml" type="danger">product_html为空</el-button>
       <el-button class="mt-10px" @click="synchronizeSkuToShopify">同步sku到shopify</el-button>
       <el-button class="mt-10px" @click="synchronizeProductHtmlToShopify">同步细节图到shopify</el-button>
-      <el-button class="mt-10px" @click="synchronizeProductInfoToShopify">全部同步到shopify</el-button>
+      <el-button class="mt-10px" :disabled="productData.is_ok == 1"
+        @click="synchronizeProductInfoToShopify">全部同步到shopify</el-button>
+
+      <el-button class="mt-30px" @click="editAtShopify">前往shopify编辑</el-button>
+      <el-button class="mt-10px" @click="viewShopifyDetail">查看shopify详情页</el-button>
+      <el-button class="mt-10px" @click="viewTmallDetail">查看天猫详情页</el-button>
+
+      <span class="mt-30px">核对清单：</span>
+      <span class="mt-10px ml-12px">1.sku价格，首尾核对</span>
+      <span class="mt-10px ml-12px">2.sku翻译先优化中文</span>
+      <span class="mt-10px ml-12px">3.细节图，首尾核对</span>
+      <span class="mt-10px ml-12px">4.参数：彩色玻璃，质保年限等</span>
+      <span class="mt-10px ml-12px">5.not-floor-lamp-switch.webp</span>
     </div>
     <div class="flex" style="position: fixed;top:100px;left:320px;cursor: pointer;">
       <img src="/src/assets/back.svg" @click="backToList">
     </div>
-    <div class="mb-8 text-center">
-      <h1 class="text-3xl font-bold text-gray-800 mb-3 leading-tight">{{ productData?.title_cn || 'No Chinese Title' }}
+    <div class="mb-8 text-center" v-if="productData">
+      <h1 v-if="productData.seo_title_cn" class="text-3xl font-bold text-gray-800 mb-3 leading-tight line-through"
+        @click="copyText(productData.title_cn)">{{
+          productData.title_cn }}
       </h1>
+      <h1 v-else class="text-3xl font-bold text-gray-800 mb-3 leading-tight" @click="copyText(productData.title_cn)">{{
+        productData.title_cn || '-' }}
+      </h1>
+
+      <div class="flex items-center justify-center gap-4 flex-wrap" v-if="productData.seo_title_cn">
+        <h2 class="text-xl font-normal text-gray-600 m-0 leading-relaxed" @click="copyText(productData.seo_title_cn)">{{
+          productData.seo_title_cn}}</h2>
+      </div>
+
       <div class="flex items-center justify-center gap-4 flex-wrap">
-        <h2 class="text-xl font-normal text-gray-600 m-0 leading-relaxed">{{ productData?.title_en || 'No English Title'
-        }}</h2>
+        <div class="flex flex-col" v-if="productData">
+          <h2 v-if="productData.title_en" class="text-base font-normal text-gray-600 m-0 leading-relaxed"
+            @click="copyText(productData.title_en)">{{
+              productData.title_en
+            }}</h2>
+          <h2 v-if="productData.seo_title_en" class="text-base font-normal text-gray-600 m-0 leading-relaxed"
+            @click="copyText(productData.seo_title_en)">{{ productData.seo_title_en }}</h2>
+        </div>
         <div class="flex gap-2 items-center">
-          <el-button type="primary" :icon="Edit" size="small" circle @click="editTitleEn" title="编辑英文标题"
-            class="transition-transform duration-300 hover:scale-110" />
-          <el-button type="success" :icon="CopyDocument" size="small" circle @click="copyTitleEn" title="复制英文标题"
+          <el-button type="primary" :icon="HelpFilled" size="small" circle @click="generateTwoSeoTitle"
+            title="用豆包AI生成新标题" class="transition-transform duration-300 hover:scale-110" />
+          <el-button type="primary" :icon="Edit" size="small" circle @click="editTitle" title="编辑标题"
             class="transition-transform duration-300 hover:scale-110" />
         </div>
       </div>
@@ -29,18 +58,18 @@
     <div class="flex items-center gap-5 mb-5 flex-wrap">
       <div class="flex items-center gap-2">
         <span class="font-semibold text-gray-900 text-15px">Product ID:</span>
-        <span class="text-blue-600 text-15px bg-white px-2 py-1 rounded border border-gray-300">{{
-          productData?.product_id || 'N/A' }}</span>
+        <span class="text-blue-600 text-15px bg-white px-2 py-1 rounded border border-gray-300"
+          @click=copyText(productData?.product_id)>{{
+            productData?.product_id || 'N/A' }}</span>
       </div>
       <div class="flex items-center gap-2">
         <span class="font-semibold text-gray-900 text-15px">Shopify ID:</span>
-        <span class="text-blue-600 text-15px bg-white px-2 py-1 rounded border border-gray-300">{{
-          productData?.shopify_id || 'N/A' }}</span>
+        <span class="text-blue-600 text-15px bg-white px-2 py-1 rounded border border-gray-300"
+          @click=copyText(productData?.shopify_id)>{{
+            productData?.shopify_id || 'N/A' }}</span>
       </div>
       <div class="flex gap-2 items-center">
         <el-button type="primary" :icon="Edit" size="small" circle @click="editShopifyId" title="编辑Shopify ID"
-          class="transition-transform duration-300 hover:scale-110" />
-        <el-button type="success" :icon="CopyDocument" size="small" circle @click="copyShopifyId" title="复制Shopify ID"
           class="transition-transform duration-300 hover:scale-110" />
       </div>
     </div>
@@ -63,7 +92,9 @@
           style="border-bottom: 2px solid #007bff;">主图</h3>
         <div class="flex">
           <el-button v-if="productData && productData.video_url" type="primary" size="small"
-            @click="previewVideo">视频</el-button>
+            @click="deleteVideo">删除视频</el-button>
+          <el-button v-if="productData && productData.video_url" type="primary" size="small" @click="previewVideo"
+            :title="productData.video_url">视频</el-button>
           <el-button type="primary" :icon="Download" size="small" circle @click="downloadAllMainImages" title="下载全部主图"
             :disabled="!productData?.main_images_cn?.length"
             class="transition-transform duration-300 hover:scale-110 disabled:hover:scale-100" />
@@ -123,7 +154,12 @@
       <div class="flex items-end justify-between mb-4">
         <h3 class="text-20px font-semibold text-gray-900 m-0 pb-2 inline-block"
           style="border-bottom: 2px solid #007bff;">详情图片</h3>
-        <el-button type="primary" @click="syncImagesToCloudflare" :loading="uploading">同步图片到Cloudflare</el-button>
+        <div class="flex">
+          <el-button type="primary" @click="deleteSuffixImages"
+            :loading="uploading">删除最后7张</el-button>
+          <el-button type="primary" @click="handleSyncImagesToCloudflare"
+            :loading="uploading">同步图片到Cloudflare</el-button>
+        </div>
       </div>
       <div class="flex gap-4 flex-wrap py-3">
         <div v-for="(image, index) in productData?.detail_images_cn || []" :key="index"
@@ -149,7 +185,7 @@
           class="transition-transform duration-300 hover:scale-105">
           编辑HTML
         </el-button>
-        <el-button type="primary" :icon="Edit" @click="translateParamHtml"
+        <el-button type="primary" @click="translateParamHtml" :loading="apiProcessingStatus === 'processing'"
           class="transition-transform duration-300 hover:scale-105">
           翻译HTML
         </el-button>
@@ -170,6 +206,10 @@
     <SkuEditModal v-model="showSkuEditModal" :sku-data="currentEditingSku" :product-id="route.params.id"
       :sku-index="currentSkuIndex" @save-success="handleSkuSaveSuccess" />
 
+    <!-- 标题编辑弹窗 -->
+    <TitleEditModal v-model="showTitleEditModal" :product-id="route.params.id" :title-data="productData"
+      @save-success="handleTitleSaveSuccess" />
+
     <!-- 图片预览弹窗 -->
     <el-dialog v-model="showImagePreview" title="图片预览" width="80%" :center="true">
       <div class="w-full h-70vh flex justify-center items-center bg-black p-0">
@@ -183,11 +223,30 @@
       <el-input v-model="editingHtmlContent" type="textarea" placeholder="请输入HTML内容"
         class="font-mono text-sm leading-relaxed" :autosize="{ minRows: 25, maxRows: 35 }" />
       <template #footer>
-        <span class="flex justify-end gap-3">
-          <el-button @click="showHtmlEditModal = false">取消</el-button>
-          <el-button type="warning" @click="cleanTitleAttributes">清理</el-button>
-          <el-button type="primary" @click="saveParamHtml" :loading="savingHtml">保存</el-button>
-        </span>
+        <div class="flex justify-between items-center">
+          <!-- API处理状态显示 -->
+          <div class="flex items-center gap-2">
+            <el-icon v-if="apiProcessingStatus === 'processing'" class="is-loading text-blue-500">
+              <Loading />
+            </el-icon>
+            <el-icon v-else-if="apiProcessingStatus === 'success'" class="text-green-500">
+              <SuccessFilled />
+            </el-icon>
+            <el-icon v-else-if="apiProcessingStatus === 'error'" class="text-red-500">
+              <CircleCloseFilled />
+            </el-icon>
+            <span v-if="apiProcessingStatus === 'processing'" class="text-blue-500 text-sm">正在处理中...</span>
+            <span v-else-if="apiProcessingStatus === 'success'" class="text-green-500 text-sm">处理成功</span>
+            <span v-else-if="apiProcessingStatus === 'error'" class="text-red-500 text-sm">处理失败</span>
+          </div>
+
+          <span class="flex justify-end gap-3">
+            <el-button @click="showHtmlEditModal = false">取消</el-button>
+            <el-button type="warning" @click="cleanTitleAttributes"
+              :loading="apiProcessingStatus === 'processing'">整理</el-button>
+            <el-button type="primary" @click="saveParamHtml" :loading="savingHtml">保存</el-button>
+          </span>
+        </div>
       </template>
     </el-dialog>
 
@@ -208,18 +267,54 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { Edit, CopyDocument, ZoomIn, Delete, Download, HelpFilled, Loading, SuccessFilled, CircleCloseFilled } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
 import axios from 'axios'
-import { ElMessageBox, ElMessage } from 'element-plus'
-import { Edit, CopyDocument, ZoomIn, Delete, Download } from '@element-plus/icons-vue'
 import SkuEditModal from '../components/SkuEditModal.vue'
-import { convertToWebP } from '../utils/imageConverter.js'
-import { translator } from '../utils/translator.js'
+import TitleEditModal from '../components/TitleEditModal.vue'
+import { useImageOperations } from '../composables/useImageOperations.js'
+import { useProductData } from '../composables/useProductData.js'
+import { formatHtml } from '../utils/htmlFormatter.js'
 const route = useRoute()
 const productData = ref(null)
-const loading = ref(false)
 const error = ref(null)
-const uploading = ref(false)
 const router = useRouter()
+
+const {
+  uploading,
+  downloadAllMainImages: downloadAllMainImagesComposable,
+  downloadAllSkuImages: downloadAllSkuImagesComposable,
+  syncImagesToCloudflare,
+  previewImage: previewImageComposable,
+} = useImageOperations()
+
+const downloadAllMainImages = async () => {
+  await downloadAllMainImagesComposable(productData.value)
+}
+
+const downloadAllSkuImages = async () => {
+  await downloadAllSkuImagesComposable(productData.value)
+}
+
+const {
+  savingHtml,
+  apiProcessingStatus,
+  fetchProductDetail: fetchProductDetailComposable,
+  updateEnPrice: updateEnPriceComposable,
+  translateSku: translateSkuComposable,
+  saveCate: saveCateComposable,
+  translateParamHtml: translateParamHtmlComposable,
+  saveParamHtml: saveParamHtmlComposable,
+  editShopifyId: editShopifyIdComposable,
+  deleteDetailImage: deleteDetailImageComposable,
+  updateProductHtml: updateProductHtmlComposable,
+  generateDetailImagesHtml: generateDetailImagesHtmlComposable,
+  cleanTitleAttributes: cleanTitleAttributesComposable,
+  synchronizeProductHtmlToShopify: synchronizeProductHtmlToShopifyComposable,
+  synchronizeProductInfoToShopify: synchronizeProductInfoToShopifyComposable,
+  synchronizeSkuToShopify: synchronizeSkuToShopifyComposable
+} = useProductData()
+
 const showSkuEditModal = ref(false)
 const currentEditingSku = ref(null)
 const currentSkuIndex = ref(-1)
@@ -227,148 +322,179 @@ const showImagePreview = ref(false)
 const previewImageUrl = ref('')
 const showHtmlEditModal = ref(false)
 const editingHtmlContent = ref('')
-const savingHtml = ref(false)
 const editingLanguage = ref('cn') // 'cn' 表示编辑中文，'en' 表示编辑英文
 const showProductHtmlEditModal = ref(false)
 const editingProductHtmlContent = ref('')
+const showTitleEditModal = ref(false)
+
+function editAtShopify() {
+  const url = `https://admin.shopify.com/store/a1jefv-w4/products/${row.shopify_id}`
+  window.open(url, '_blank')
+}
+
+function viewShopifyDetail() {
+  const suffix = productData.value.title_en.replace(/\s+/g, '-').toLowerCase()
+  const url = `https://tiffanylamps.art/products/${suffix}`
+  window.open(url, '_blank')
+}
+
+function viewTmallDetail() {
+  const url = `https://detail.tmall.com/item.htm?id=${row.product_id}`
+  window.open(url, '_blank')
+}
+
+async function deleteVideo() {
+  const updateData = {
+    video_url: ''
+  }
+  const productId = route.params.id
+  await axios.put(`${window.lx_host}/products/${productId}`, updateData)
+  fetchProductDetail(productId)
+}
+
+function copyText(e) {
+  navigator.clipboard.writeText(e)
+  ElMessage.success('已复制到剪贴板')
+}
 
 function previewVideo() {
   window.open(productData.value.video_url, '_blank')
 }
 
-async function downloadVideo() {
-  if (!productData.value.video_url) {
-    return
-  }
-
+async function generateTwoSeoTitle() {
   try {
-    // 显示下载提示
-    const loadingToast = document.createElement('div')
-    loadingToast.textContent = '正在下载视频...'
-    loadingToast.style.cssText = 'position:fixed;top:20px;right:20px;background:#333;color:white;padding:10px;border-radius:5px;z-index:9999'
-    document.body.appendChild(loadingToast)
-
-    // 获取视频文件
-    const response = await fetch(productData.value.video_url)
-    if (!response.ok) {
-      throw new Error('下载失败')
-    }
-
-    const blob = await response.blob()
-
-    // 创建下载链接
-    const url = window.URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${productData.value.product_id}`
-
-    // 触发下载
-    document.body.appendChild(a)
-    a.click()
-
-    // 清理
-    document.body.removeChild(a)
-    window.URL.revokeObjectURL(url)
-    document.body.removeChild(loadingToast)
-
-  } catch (error) {
-    console.error('下载视频失败:', error)
-    alert('下载视频失败，请检查网络连接或视频链接是否有效')
-  }
-}
-
-async function updateEnPrice() {
-  if (productData.value?.sku_data && productData.value.sku_data.length > 0) {
-    productData.value.sku_data.forEach(sku => {
-      if (sku.price) {
-        const originalPrice = parseFloat(sku.price)
-        sku.price_en = Math.round(originalPrice * 0.43)
-        console.log(`${originalPrice} => ${sku.price_en}`)
-      }
-    })
-    const productId = route.params.id
-    const updateData = {
-      ...productData.value
-    }
-    await axios.put(`${window.lx_host}/products/${productId}`, updateData)
-    ElMessage.success('美元价格已更新')
-  }
-}
-
-async function fanyiSku() {
-  if (productData.value?.sku_data && productData.value.sku_data.length > 0) {
-    productData.value.sku_data.forEach(sku => {
-      if (sku.price) {
-        const originalPrice = parseFloat(sku.price)
-        sku.price_en = Math.round(originalPrice * 0.43)
-        console.log(`${originalPrice} => ${sku.price_en}`)
-      }
-    })
-  }
-
-  if (!productData.value?.sku_data || productData.value.sku_data.length === 0) {
-    ElMessage.warning('暂无SKU数据可翻译')
-    return
-  }
-  try {
-    ElMessage.info('正在翻译SKU名称，请稍候...')
-    const skuNamesToTranslate = productData.value.sku_data
-      .filter(sku => sku.skuNameCn && sku.skuNameCn.trim())
-      .map(sku => sku.skuNameCn)
-    if (skuNamesToTranslate.length === 0) {
-      ElMessage.warning('没有找到需要翻译的SKU中文名称')
+    // 检查必要的数据
+    if (!productData.value?.title_cn) {
+      ElMessage.error('缺少产品中文标题，无法生成SEO标题')
       return
     }
-    // 将多个SKU名称用*符号连接成一个句子
-    const combinedQuery = skuNamesToTranslate.join('*')
 
-    const translatePromise = new Promise((resolve, reject) => {
-      translator.translate(
-        combinedQuery,
-        'zh',
-        'en',
-        (data) => {
-          if (data && data.trans_result && data.trans_result.length > 0) {
-            resolve(data.trans_result[0].dst)
-          } else {
-            reject(new Error('翻译结果格式异常'))
-          }
+    if (!productData.value?.main_images_cn?.[0]) {
+      ElMessage.error('缺少产品主图，无法生成SEO标题')
+      return
+    }
+
+    const old_title = productData.value.title_cn || ''
+    const main_img = productData.value.main_images_cn[0]
+    const prompt1 = `如图所示，这是一款蒂凡尼灯饰产品，它的原标题为${old_title}，请为其生成中文SEO标题（适用于天猫平台）和英文SEO标题（适用于shopify平台）。`
+    const prompt2 = `请使用JSON格式返回两个新生成的标题，并将这两个字段分别命名为'seo_title_cn'和'seo_title_en'，参考下面的格式：`
+    const prompt3 = `{"seo_title_cn": "蒂凡尼灯","seo_title_en":"tiffany lamp"}，不要使用Markdown格式，不要添加注释`
+    const prompt = prompt1 + prompt2 + prompt3
+
+    const msg_content = [
+      {
+        "image_url": {
+          "url": main_img
         },
-        (error) => {
-          reject(new Error('翻译失败: ' + error))
+        "type": "image_url"
+      },
+      {
+        "text": prompt,
+        "type": "text"
+      }
+    ]
+
+    ElMessage.info('正在使用豆包AI生成SEO标题，请稍候...')
+
+    // 调用豆包AI模型API
+    const response = await axios.post('https://ark.cn-beijing.volces.com/api/v3/chat/completions', {
+      "model": "doubao-1.5-thinking-vision-pro-250428",
+      "messages": [
+        {
+          "content": msg_content,
+          "role": "user"
         }
-      )
-    })
-    const translatedText = await translatePromise
-
-    // 通过*符号拆分翻译结果
-    const translatedNames = translatedText.split('*')
-
-    // 创建翻译映射
-    const translationMap = {}
-    skuNamesToTranslate.forEach((originalName, index) => {
-      if (index < translatedNames.length) {
-        translationMap[originalName] = translatedNames[index].trim()
+      ]
+    }, {
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${window.lx_doubao}`
       }
     })
-    const sku_data_translated = productData.value.sku_data.map(sku => {
-      const translatedName = translationMap[sku.skuNameCn]
-      return {
-        ...sku,
-        skuNameEn: translatedName || sku.skuNameEn
-      }
-    })
+
+    // 解析AI返回的结果
+    const aiResponse = response.data?.choices?.[0]?.message?.content
+    if (!aiResponse) {
+      throw new Error('AI返回结果为空')
+    }
+
+    // 尝试解析JSON格式的标题
+    let titleData
+    try {
+      // 清理可能的markdown格式
+      const cleanResponse = aiResponse.replace(/```json\n?|```\n?/g, '').trim()
+      titleData = JSON.parse(cleanResponse)
+    } catch (parseError) {
+      throw new Error('AI返回的结果格式不正确，无法解析JSON')
+    }
+
+    const { seo_title_cn, seo_title_en } = titleData
+
+    if (!seo_title_cn || !seo_title_en) {
+      throw new Error('AI返回的标题数据不完整')
+    }
+
+    // 更新产品信息到数据库
     const productId = route.params.id
     const updateData = {
-      ...productData.value,
-      sku_data: sku_data_translated
+      seo_title_cn: seo_title_cn,
+      seo_title_en: seo_title_en
     }
+
     await axios.put(`${window.lx_host}/products/${productId}`, updateData)
-    productData.value.sku_data = sku_data_translated
-    ElMessage.success(`SKU翻译完成，共翻译了 ${Object.keys(translationMap).length} 个SKU名称`)
+
+    // 更新本地数据
+    productData.value.seo_title_cn = seo_title_cn
+    productData.value.seo_title_en = seo_title_en
+
+    ElMessage.success('两个SEO标题生成并更新成功')
+
   } catch (error) {
-    console.error('翻译SKU失败:', error)
-    ElMessage.error('翻译失败：' + (error.message || '未知错误'))
+    console.error('生成SEO标题失败:', error)
+
+    if (error.response?.status === 401) {
+      ElMessage.error('API密钥无效，请检查ARK_API_KEY配置')
+    } else if (error.response?.status === 429) {
+      ElMessage.error('API调用频率超限，请稍后重试')
+    } else if (error.response?.data?.error?.message) {
+      ElMessage.error(`AI服务错误: ${error.response.data.error.message}`)
+    } else if (error.message.includes('AI返回')) {
+      ElMessage.error(error.message)
+    } else {
+      ElMessage.error('生成SEO标题失败：' + (error.message || '未知错误'))
+    }
+  }
+}
+
+function editTitle() {
+  showTitleEditModal.value = true
+}
+
+const handleTitleSaveSuccess = (titleData) => {
+  // 更新本地数据
+  productData.value.title_cn = titleData.title_cn
+  productData.value.title_en = titleData.title_en
+  productData.value.seo_title_cn = titleData.seo_title_cn
+  productData.value.seo_title_en = titleData.seo_title_en
+}
+
+const updateEnPrice = async () => {
+  const productId = route.params.id
+  const updatedData = await updateEnPriceComposable(productId, productData.value)
+  if (updatedData) {
+    productData.value = updatedData
+  }
+}
+
+const fanyiSku = async () => {
+  const productId = route.params.id
+  try {
+    const updatedData = await translateSkuComposable(productId, productData.value)
+    if (updatedData) {
+      productData.value = updatedData
+    }
+  } catch (error) {
+    // 错误处理已在 composable 中完成
   }
 }
 
@@ -383,288 +509,66 @@ function previewProductHtml() {
   showProductHtmlEditModal.value = true
 }
 
-// 同步商品sku到Shopify
 const synchronizeSkuToShopify = async () => {
-  const shopify_id = productData.value.shopify_id || ''
-  if (shopify_id == '') {
-    ElMessage.error('缺少Shopify ID，无法同步')
-    return
-  }
-  try {
-    ElMessage.info('正在同步商品信息到Shopify，请稍候...')
-    let updateData = {}
-    if (productData.value.sku_data && productData.value.sku_data.length) {
-      let values = []
-      let updateData_variants = []
-      for (let i = 0; i < productData.value.sku_data.length; i++) {
-        let sku = productData.value.sku_data[i]
-        values.push(sku.skuNameCn)
-        updateData_variants.push({
-          "price": sku.price_en,
-          "compare_at_price": Math.round(sku.price_en * 1.2),
-          "title": sku.skuNameEn,
-          "option1": sku.skuNameEn
-        })
-      }
-      let option = {
-        "name": "style",
-        "values": values
-      }
-      let updateData_options = [option]
-      updateData.options = updateData_options
-      updateData.variants = updateData_variants
-    }
-    console.log('updateData :', updateData);
-    const response = await axios.put(
-      `http://192.168.1.12:3000/api/products/${shopify_id}`,
-      updateData,
-      {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      }
-    )
-    if (response.data.success) {
-      ElMessage.success('sku已成功同步到Shopify')
-    } else {
-      throw new Error(response.data.message || '同步失败')
-    }
-  } catch (error) {
-    console.error('同步sku到Shopify失败:', error)
-    const errorMessage = error.response?.data?.message || error.message || '同步失败'
-    ElMessage.error(`同步sku到Shopify失败: ${errorMessage}`)
-  }
+  await synchronizeSkuToShopifyComposable(productData.value)
 }
 
 const fetchProductDetail = async (productId) => {
   try {
-    loading.value = true
-    const response = await axios.get(`${window.lx_host}/products/${productId}`)
-    if (!response.data.data.cate) {
-      response.data.data.cate = "Not decided"
-    }
-    productData.value = response.data.data
+    const data = await fetchProductDetailComposable(productId)
+    productData.value = data
   } catch (err) {
     error.value = err.message
-  } finally {
-    loading.value = false
-  }
-}
-
-const editTitleEn = async () => {
-  try {
-    const { value } = await ElMessageBox.prompt(
-      '请输入新的英文标题',
-      '编辑英文标题',
-      {
-        confirmButtonText: '确认',
-        cancelButtonText: '取消',
-        inputValue: productData.value?.title_en || ' Tiffany Lamp',
-        inputPlaceholder: '请输入英文标题'
-      }
-    )
-
-    if (value && value.trim()) {
-      await updateProductTitle(value.trim())
-    }
-  } catch (error) {
-    // 用户取消操作
-  }
-}
-
-const copyTitleEn = async () => {
-  const titleEn = productData.value?.title_en
-  if (!titleEn) {
-    ElMessage.warning('暂无英文标题可复制')
-    return
-  }
-
-  try {
-    await navigator.clipboard.writeText(titleEn)
-    ElMessage.success('英文标题已复制到剪贴板')
-  } catch (error) {
-    ElMessage.error('复制失败，请手动复制')
   }
 }
 
 const saveCate = async (newCate) => {
-  try {
-    const productId = route.params.id
-    const updateData = {
-      ...productData.value,
-      cate: newCate
-    }
-    await axios.put(`${window.lx_host}/products/${productId}`, updateData)
-    productData.value.cate = newCate
-    ElMessage.success('分类更新成功')
-  } catch (error) {
-    ElMessage.error('更新失败：' + (error.response?.data?.message || error.message))
-  }
-}
-
-const updateProductTitle = async (newTitleEn) => {
-  try {
-    const productId = route.params.id
-    const updateData = {
-      ...productData.value,
-      title_en: newTitleEn
-    }
-    await axios.put(`${window.lx_host}/products/${productId}`, updateData)
-    productData.value.title_en = newTitleEn
-    ElMessage.success('英文标题更新成功')
-  } catch (error) {
-    ElMessage.error('更新失败：' + (error.response?.data?.message || error.message))
+  const productId = route.params.id
+  const updatedData = await saveCateComposable(productId, productData.value, newCate)
+  if (updatedData) {
+    productData.value = updatedData
   }
 }
 
 const editParamHtml = () => {
-  editingHtmlContent.value = productData.value?.param_info_cn || ''
+  const rawHtml = productData.value?.param_info_cn || ''
+  editingHtmlContent.value = formatHtml(rawHtml)
   editingLanguage.value = 'cn'
   showHtmlEditModal.value = true
 }
 
 const editEnglishParamHtml = () => {
-  editingHtmlContent.value = productData.value?.param_info_en || ''
+  const rawHtml = productData.value?.param_info_en || ''
+  editingHtmlContent.value = formatHtml(rawHtml)
   editingLanguage.value = 'en'
   showHtmlEditModal.value = true
 }
 
 const translateParamHtml = async () => {
-  let paramInfoCn = productData.value?.param_info_cn
-  if (!paramInfoCn || paramInfoCn.trim() === '') {
-    ElMessage.warning('暂无中文参数信息可翻译')
-    return
-  }
-  try {
-    ElMessage.info('正在翻译参数信息，请稍候...')
-    // 删除<style>...</style>部分
-    const cleanedParamInfoCn = paramInfoCn.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-    if (!cleanedParamInfoCn || cleanedParamInfoCn.trim() === '') {
-      ElMessage.warning('删除样式后暂无内容可翻译')
-      return
-    }
-    const response = await fetch('https://ark.cn-beijing.volces.com/api/v3/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${window.lx_doubao}`
-      },
-      body: JSON.stringify({
-        model: 'doubao-seed-1-6-flash-250615',
-        messages: [
-          {
-            content: [
-              {
-                text: `请将下面的代码中的中文翻译成英文，请注意'彩色玻璃'要翻译成'Stained Glass'(翻译后按原代码格式返回，不要使用 Markdown 格式)：${cleanedParamInfoCn}`,
-                type: 'text'
-              }
-            ],
-            role: 'user'
-          }
-        ]
-      })
-    })
+  // 重置API状态
+  apiProcessingStatus.value = null
 
-    if (!response.ok) {
-      throw new Error(`翻译API请求失败: ${response.statusText}`)
-    }
-
-    const result = await response.json()
-    if (result.choices && result.choices.length > 0) {
-      const translatedContent = result.choices[0].message.content
-      const productId = route.params.id
-      const updateData = {
-        ...productData.value,
-        param_info_en: translatedContent
-      }
-      await axios.put(`${window.lx_host}/products/${productId}`, updateData)
-      productData.value.param_info_en = translatedContent
-      ElMessage.success('参数信息翻译并保存成功')
-    } else {
-      throw new Error('翻译API返回数据格式异常')
-    }
-
-  } catch (error) {
-    console.error('翻译失败:', error)
-    ElMessage.error('翻译失败：' + (error.message || '未知错误'))
+  const productId = route.params.id
+  const updatedData = await translateParamHtmlComposable(productId, productData.value)
+  if (updatedData) {
+    productData.value = updatedData
   }
 }
 
 const saveParamHtml = async () => {
-  try {
-    savingHtml.value = true
-    const productId = route.params.id
-    const updateData = {
-      ...productData.value
-    }
-    if (editingLanguage.value === 'cn') {
-      updateData.param_info_cn = editingHtmlContent.value
-    } else {
-      updateData.param_info_en = editingHtmlContent.value
-    }
-    await axios.put(`${window.lx_host}/products/${productId}`, updateData)
-    if (editingLanguage.value === 'cn') {
-      productData.value.param_info_cn = editingHtmlContent.value
-      ElMessage.success('中文参数信息更新成功')
-    } else {
-      productData.value.param_info_en = editingHtmlContent.value
-      ElMessage.success('英文参数信息更新成功')
-    }
+  const productId = route.params.id
+  const updatedData = await saveParamHtmlComposable(productId, productData.value, editingHtmlContent.value, editingLanguage.value)
+  if (updatedData) {
+    productData.value = updatedData
     showHtmlEditModal.value = false
-  } catch (error) {
-    ElMessage.error('更新失败：' + (error.response?.data?.message || error.message))
-  } finally {
-    savingHtml.value = false
   }
 }
 
 const editShopifyId = async () => {
-  try {
-    const { value } = await ElMessageBox.prompt(
-      '请输入新的Shopify ID',
-      '编辑Shopify ID',
-      {
-        confirmButtonText: '确认',
-        cancelButtonText: '取消',
-        inputValue: productData.value?.shopify_id || '',
-        inputPlaceholder: '请输入Shopify ID'
-      }
-    )
-
-    if (value && value.trim()) {
-      await updateShopifyId(value.trim())
-    }
-  } catch (error) {
-    // 用户取消操作
-  }
-}
-
-const copyShopifyId = async () => {
-  const shopifyId = productData.value?.shopify_id
-  if (!shopifyId || shopifyId === 'N/A') {
-    ElMessage.warning('暂无Shopify ID可复制')
-    return
-  }
-  try {
-    await navigator.clipboard.writeText(shopifyId)
-    ElMessage.success('Shopify ID已复制到剪贴板')
-  } catch (error) {
-    ElMessage.error('复制失败，请手动复制')
-  }
-}
-
-const updateShopifyId = async (newShopifyId) => {
-  try {
-    const productId = route.params.id
-    const updateData = {
-      ...productData.value,
-      shopify_id: newShopifyId
-    }
-    await axios.put(`${window.lx_host}/products/${productId}`, updateData)
+  const productId = route.params.id
+  const newShopifyId = await editShopifyIdComposable(productId, productData.value?.shopify_id || '')
+  if (newShopifyId) {
     productData.value.shopify_id = newShopifyId
-    ElMessage.success('Shopify ID更新成功')
-  } catch (error) {
-    ElMessage.error('更新失败：' + (error.response?.data?.message || error.message))
   }
 }
 
@@ -681,113 +585,22 @@ const handleSkuSaveSuccess = (result) => {
 }
 
 const previewImage = (imageUrl) => {
-  previewImageUrl.value = imageUrl
-  showImagePreview.value = true
+  previewImageComposable(imageUrl, (url, show) => {
+    previewImageUrl.value = url
+    showImagePreview.value = show
+  })
 }
 
 const deleteDetailImage = async (index) => {
-  try {
-    const productId = route.params.id
-    const newDetailImages = [...(productData.value?.detail_images_cn || [])]
-    newDetailImages.splice(index, 1)
-    const updateData = {
-      ...productData.value,
-      detail_images_cn: newDetailImages
-    }
-    await axios.put(`${window.lx_host}/products/${productId}`, updateData)
-    productData.value.detail_images_cn = newDetailImages
-    ElMessage.success('图片删除成功')
-  } catch (error) {
-    ElMessage.error('删除失败：' + (error.response?.data?.message || error.message))
-  }
-}
-
-const downloadImage = async (imageUrl, filename) => {
-  try {
-    const response = await fetch(imageUrl)
-    const blob = await response.blob()
-    const webpBlob = await convertToWebP(blob, 95)
-    const webpFilename = filename.replace(/\.[^.]+$/, '.webp')
-    const url = window.URL.createObjectURL(webpBlob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = webpFilename
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    window.URL.revokeObjectURL(url)
-  } catch (error) {
-    console.error('下载图片失败:', error)
-    throw error
-  }
-}
-
-const downloadAllMainImages = async () => {
-  downloadVideo()
-  const mainImages = productData.value?.main_images_cn
-  if (!mainImages || mainImages.length === 0) {
-    ElMessage.warning('暂无主图可下载')
-    return
-  }
-  try {
-    ElMessage.info('开始下载主图，请稍候...')
-    for (let i = 0; i < mainImages.length; i++) {
-      const imageUrl = mainImages[i]
-      const filename = `${productData.value.product_id}_${i + 1}.jpg`
-      await downloadImage(imageUrl, filename)
-      if (i < mainImages.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 500))
-      }
-    }
-    ElMessage.success(`成功下载 ${mainImages.length} 张主图`)
-  } catch (error) {
-    ElMessage.error('下载失败：' + error.message)
-  }
-}
-
-const downloadAllSkuImages = async () => {
-  const skuData = productData.value?.sku_data
-  if (!skuData || skuData.length === 0) {
-    ElMessage.warning('暂无SKU图片可下载')
-    return
-  }
-  try {
-    ElMessage.info('开始下载SKU图片，请稍候...')
-    for (let i = 0; i < skuData.length; i++) {
-      const sku = skuData[i]
-      if (sku.skuImageUrl) {
-        const filename = `${i + 1}.【${sku.skuNameEn}】${sku.price_en}.jpg`
-        await downloadImage(sku.skuImageUrl, filename)
-        if (i < skuData.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 500))
-        }
-      }
-    }
-    const validSkuCount = skuData.filter(sku => sku.skuImageUrl).length
-    ElMessage.success(`成功下载 ${validSkuCount} 张SKU图片`)
-  } catch (error) {
-    ElMessage.error('下载失败：' + error.message)
+  const productId = route.params.id
+  const updatedData = await deleteDetailImageComposable(productId, productData.value, index)
+  if (updatedData) {
+    productData.value = updatedData
   }
 }
 
 const generateDetailImagesHtml = () => {
-  const id = productData.value.product_id
-  const count = productData.value.detail_images_cn.length || []
-  const imageUrls = []
-  for (let i = 1; i <= count; i++) {
-    imageUrls.push(`https://img.tiffanylamps.art/${id}/detail/${i}.webp`)
-  }
-  imageUrls.push('https://img.tiffanylamps.art/bottom.webp')
-  if (productData.value.cate == 'Floor Lamp') {
-    imageUrls.push('https://img.tiffanylamps.art/floor-lamp-switch.webp')
-  } else if (productData.value.cate == 'Not decided') {
-    imageUrls.push('https://img.tiffanylamps.art/floor-lamp-switch.webp')
-    imageUrls.push('https://img.tiffanylamps.art/not-floor-lamp-switch.webp')
-  } else {
-    imageUrls.push('https://img.tiffanylamps.art/not-floor-lamp-switch.webp')
-  }
-  const imgTags = imageUrls.map(url => `  <img src="${url}">`).join('\n')
-  return `<div style="display: flex;flex-direction: column;border-radius: 8px;box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);overflow: hidden;">\n${imgTags}\n</div>`
+  return generateDetailImagesHtmlComposable(productData.value)
 }
 
 const updateProductHtml = async () => {
@@ -797,146 +610,32 @@ const updateProductHtml = async () => {
   } else {
     new_product_html = generateDetailImagesHtml()
   }
-  try {
-    const productId = route.params.id
-    const updateData = {
-      ...productData.value,
-      product_html: new_product_html
-    }
-    await axios.put(`${window.lx_host}/products/${productId}`, updateData)
-    productData.value.product_html = new_product_html
-    ElMessage.success('product_html更新成功')
+  const productId = route.params.id
+  const updatedData = await updateProductHtmlComposable(productId, productData.value, new_product_html)
+  if (updatedData) {
+    productData.value = updatedData
     showProductHtmlEditModal.value = false
-  } catch (error) {
-    ElMessage.error('更新失败：' + (error.response?.data?.message || error.message))
   }
 }
 
-const syncImagesToCloudflare = async () => {
-  const detailImages = productData.value?.detail_images_cn
-  if (!detailImages || detailImages.length === 0) {
-    ElMessage.warning('暂无详情图片可同步')
-    return
-  }
+async function handleSyncImagesToCloudflare() {
   try {
-    uploading.value = true
-    ElMessage.info(`开始同步 ${detailImages.length} 张详情图片到Cloudflare（使用Squoosh转换为WebP格式），请稍候...`)
-    const uploadedUrls = []
-    for (let i = 0; i < detailImages.length; i++) {
-      const imageUrl = detailImages[i]
-      try {
-        const response = await fetch(imageUrl)
-        if (!response.ok) {
-          throw new Error(`获取图片失败: ${response.statusText}`)
-        }
-        const blob = await response.blob()
-        ElMessage.info(`正在使用Squoosh转换第 ${i + 1} 张图片为WebP格式...`)
-        const webpBlob = await convertToWebP(blob)
-        const formData = new FormData()
-        const filename = `${productData.value.product_id}/detail/${i + 1}.webp`
-        const file = new File([webpBlob], filename, { type: 'image/webp' })
-        formData.append('file', file)
-        const uploadResponse = await axios.post(`${window.lx_host}/upload-to-r2`, formData, {
-          headers: {}
-        })
-        if (uploadResponse.data.success) {
-          uploadedUrls.push(uploadResponse.data.url)
-          ElMessage.success(`第 ${i + 1} 张图片已通过Squoosh转换为WebP格式并上传成功`)
-        } else {
-          throw new Error(uploadResponse.data.message || '上传失败')
-        }
-        if (i < detailImages.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 500))
-        }
-      } catch (error) {
-        console.error(`上传第 ${i + 1} 张图片失败:`, error)
-        ElMessage.error(`第 ${i + 1} 张图片上传失败: ${error.message}`)
-      }
-    }
-    if (uploadedUrls.length > 0) {
-      ElMessage.success(`成功使用Squoosh将 ${uploadedUrls.length} 张图片转换为WebP格式并同步到Cloudflare R2`)
-      console.log('通过Squoosh转换并上传成功的WebP图片URLs:', uploadedUrls)
-      updateProductHtml()
-    } else {
-      ElMessage.error('没有图片上传成功')
-    }
-  } catch (error) {
-    console.error('同步图片失败:', error)
-    ElMessage.error('同步失败：' + error.message)
-  } finally {
-    uploading.value = false
+    const data = await fetchProductDetailComposable(productId)
+    productData.value = data
+    syncImagesToCloudflare(productData.value, updateProductHtml)
+  } catch (err) {
+    error.value = err.message
   }
 }
 
 const cleanTitleAttributes = async () => {
-  try {
-    const content = editingHtmlContent.value
-    if (!content) {
-      ElMessage.warning('暂无内容可清理')
-      return
+  apiProcessingStatus.value = null
+  const updatedData = await cleanTitleAttributesComposable(productData.value?.param_info_cn || '')
+  if (updatedData) {
+    editingHtmlContent.value = updatedData
+    if (editingLanguage.value === 'cn') {
+      productData.value.param_info_cn = updatedData
     }
-    // 匹配模式：title="任何内容"（包括转义字符）
-    const titlePattern = /\s+title="[^"]*"/g
-    const matches = content.match(titlePattern)
-    let newContent = content
-    if (!matches) {
-      console.log('未找到title属性')
-    } else {
-      newContent = content.replace(titlePattern, '')
-    }
-    newContent = newContent.replace("豪蒂（家装灯饰）", "Hauty")
-    newContent = newContent.replace("豪蒂", "Hauty")
-    newContent = newContent.replace("10年", "3年")
-    newContent = newContent.replace("5年", "3年")
-    newContent = newContent.replace("其他/other", "")
-    // 使用API接口整理数据：
-    try {
-      ElMessage.info('正在整理参数信息，请稍候...')
-      // 提取<style>...</style>部分
-      const styleMatches = newContent.match(/<style[^>]*>[\s\S]*?<\/style>/gi) || []
-      // 删除<style>...</style>部分
-      const cleanedParamInfoCn = newContent.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-      const response = await fetch('https://ark.cn-beijing.volces.com/api/v3/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${window.lx_doubao}`
-        },
-        body: JSON.stringify({
-          model: 'doubao-seed-1-6-flash-250615',
-          messages: [
-            {
-              content: [
-                {
-                  text: `请将下面的代码中的"灯具是否带光源"对应的值改为"光源将作为赠品赠送"，将"颜色分类"对应的值改为"中国广东"，然后将"颜色分类"四个字改为"产地"，不要在代码中增加注释，不要使用 Markdown 格式，直接返回代码本体。：${cleanedParamInfoCn}`,
-                  type: 'text'
-                }
-              ],
-              role: 'user'
-            }
-          ]
-        })
-      })
-      if (!response.ok) {
-        throw new Error(`请求失败: ${response.statusText}`)
-      }
-      const result = await response.json()
-      if (result.choices && result.choices.length > 0) {
-        let message_content = result.choices[0].message.content
-        // 重新添加<style>标签
-        if (styleMatches.length > 0) {
-          message_content = styleMatches.join('') + message_content
-        }
-        editingHtmlContent.value = message_content
-      } else {
-        throw new Error('API返回数据格式异常')
-      }
-    } catch (error) {
-      console.error('失败:', error)
-      ElMessage.error('失败：' + (error.message || '未知错误'))
-    }
-  } catch (error) {
-    console.log(error)
   }
 }
 
@@ -947,133 +646,44 @@ onMounted(() => {
 })
 
 const synchronizeProductHtmlToShopify = async () => {
-  let param_info_en = productData.value.param_info_en || ""
-  let param_info_cn = productData.value.param_info_cn || ""
-  param_info_en = param_info_en.replace(`<p class="section-title">Parameter information</p>`, '')
-  param_info_cn = param_info_cn.replace(`<p class="section-title">Parameter information</p>`, '')
-  const shopify_id = productData.value.shopify_id || ''
-  const product_html = productData.value.product_html || ''
-  if (shopify_id == '') {
-    ElMessage.error('缺少Shopify ID，无法同步')
-    return
-  }
-  if (product_html == '') {
-    ElMessage.error('缺少product_html，无法同步')
-    return
-  }
-  if (param_info_en == '') {
-    ElMessage.error('缺少param_info_en，无法同步')
-    return
-  }
-  if (param_info_cn == '') {
-    ElMessage.error('缺少param_info_cn，无法同步')
-    return
-  }
-  try {
-    ElMessage.info('正在同步商品信息到Shopify，请稍候...')
-    const prefix = `<p class="section-title">Parameter information</p>`
-    let updateData = {
-      "body_html": prefix + param_info_en + param_info_cn + product_html
-    }
-    console.log('updateData :', updateData);
-    const response = await axios.put(
-      `http://192.168.1.12:3000/api/products/${shopify_id}`,
-      updateData,
-      {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      }
-    )
-    if (response.data.success) {
-      ElMessage.success('商品信息已成功同步到Shopify')
-      console.log('Shopify同步成功:', response.data)
-    } else {
-      throw new Error(response.data.message || '同步失败')
-    }
-  } catch (error) {
-    console.error('同步到Shopify失败:', error)
-    const errorMessage = error.response?.data?.message || error.message || '同步失败'
-    ElMessage.error(`同步到Shopify失败: ${errorMessage}`)
-  }
+  await synchronizeProductHtmlToShopifyComposable(productData.value)
 }
 
 const synchronizeProductInfoToShopify = async () => {
-  let param_info_en = productData.value.param_info_en || ""
-  let param_info_cn = productData.value.param_info_cn || ""
-  param_info_en = param_info_en.replace(`<p class="section-title">Parameter information</p>`, '')
-  param_info_cn = param_info_cn.replace(`<p class="section-title">Parameter information</p>`, '')
-  const shopify_id = productData.value.shopify_id || ''
-  const product_html = productData.value.product_html || ''
-  const title_en = productData.value.title_en || ''
+  await synchronizeProductInfoToShopifyComposable(productData.value)
+  const updateData = {
+    is_ok: 1
+  }
+  const productId = route.params.id
+  await axios.put(`${window.lx_host}/products/${productId}`, updateData)
+}
 
-  if (shopify_id == '') {
-    ElMessage.error('缺少Shopify ID，无法同步')
+const deleteSuffixImages = async () => {
+  if (!productData.value?.detail_images_cn || productData.value.detail_images_cn.length === 0) {
+    ElMessage.warning('暂无图片可删除')
     return
   }
-  if (product_html == '') {
-    ElMessage.error('缺少product_html，无法同步')
+  
+  const currentLength = productData.value.detail_images_cn.length
+  if (currentLength <= 7) {
+    ElMessage.warning('图片数量不足7张，无法删除最后7张')
     return
   }
-  if (title_en == '') {
-    ElMessage.error('缺少title_en，无法同步')
-    return
-  }
-  if (param_info_en == '') {
-    ElMessage.error('缺少param_info_en，无法同步')
-    return
-  }
-  if (param_info_cn == '') {
-    ElMessage.error('缺少param_info_cn，无法同步')
-    return
-  }
+  
   try {
-    ElMessage.info('正在同步商品信息到Shopify，请稍候...')
-    const prefix = `<p class="section-title">Parameter information</p>`
-    let updateData = {
-      "title": title_en,
-      "product_type": productData.value.cate,
-      "vendor": "Hauty",
-      "body_html": prefix + param_info_en + param_info_cn + product_html
+    // 删除最后7个元素
+    const newDetailImages = [...productData.value.detail_images_cn]
+    newDetailImages.splice(-7, 7)
+    const updateData = {
+      detail_images_cn: newDetailImages
     }
-
-    if (productData.value.sku_data && productData.value.sku_data.length) {
-      let values = []
-      let updateData_variants = []
-      for (let i = 0; i < productData.value.sku_data.length; i++) {
-        let sku = productData.value.sku_data[i]
-        values.push(sku.skuNameCn)
-        updateData_variants.push({
-          "price": sku.price_en,
-          "compare_at_price": Math.round(sku.price_en * 1.2),
-          "title": sku.skuNameEn,
-          "option1": sku.skuNameEn
-        })
-      }
-      let option = {
-        "name": "style",
-        "values": values
-      }
-      let updateData_options = [option]
-      updateData.options = updateData_options
-      updateData.variants = updateData_variants
-    }
-    const response = await axios.put(`http://192.168.1.12:3000/api/products/${shopify_id}`, updateData, {
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    }
-    )
-    if (response.data.success) {
-      ElMessage.success('商品信息已成功同步到Shopify')
-      console.log('Shopify同步成功:', response.data)
-    } else {
-      throw new Error(response.data.message || '同步失败')
-    }
+    await axios.put(`${window.lx_host}/products/${route.params.id}`, updateData)
+    productData.value.detail_images_cn = newDetailImages
+    ElMessage.success(`成功删除最后7张图片，剩余${newDetailImages.length}张图片`)
   } catch (error) {
-    console.error('同步到Shopify失败:', error)
-    const errorMessage = error.response?.data?.message || error.message || '同步失败'
-    ElMessage.error(`同步到Shopify失败: ${errorMessage}`)
+    console.error('删除图片失败:', error)
+    ElMessage.error('删除图片失败：' + (error.response?.data?.message || error.message))
   }
 }
+
 </script>
