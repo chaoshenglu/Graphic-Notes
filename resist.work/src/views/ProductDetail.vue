@@ -9,6 +9,7 @@
       <el-button class="mt-10px" @click="synchronizeProductHtmlToShopify">同步细节图到shopify</el-button>
       <el-button class="mt-10px" :disabled="productData.is_ok == 1"
         @click="synchronizeProductInfoToShopify">全部同步到shopify</el-button>
+      <el-button class="mt-10px" :disabled="productData.is_ok != 1" @click="setSeoData">设置SEO数据</el-button>
 
       <el-button class="mt-30px" @click="editAtShopify">前往shopify编辑</el-button>
       <el-button class="mt-10px" @click="viewShopifyDetail">查看shopify详情页</el-button>
@@ -34,7 +35,7 @@
       </h1>
 
       <div class="flex items-center justify-center gap-4 flex-wrap" v-if="productData.seo_title_cn">
-        <h2 class="text-xl font-normal text-gray-600 m-0 leading-relaxed" @click="copyText(productData.seo_title_cn)">{{
+        <h2 class="text-3xl font-normal text-gray-600 m-0 leading-relaxed" @click="copyText(productData.seo_title_cn)">{{
           productData.seo_title_cn}}</h2>
       </div>
 
@@ -382,8 +383,10 @@ async function generateTwoSeoTitle() {
     const main_img = productData.value.main_images_cn[0]
     const prompt1 = `如图所示，这是一款蒂凡尼灯饰产品，它的原标题为${old_title}，请为其生成中文SEO标题（适用于天猫平台）和英文SEO标题（适用于shopify平台）。`
     const prompt2 = `请使用JSON格式返回两个新生成的标题，并将这两个字段分别命名为'seo_title_cn'和'seo_title_en'，参考下面的格式：`
-    const prompt3 = `{"seo_title_cn": "蒂凡尼灯","seo_title_en":"tiffany lamp"}，不要使用Markdown格式，不要添加注释`
-    const prompt = prompt1 + prompt2 + prompt3
+    const prompt3 = `{"seo_title_cn": "台灯","seo_title_en":"table lamp"}，不要使用Markdown格式，不要添加注释，seo_title_en的长度不要超过70个字符。`
+    const prompt4 = 'seo_title_cn的长度不受限制，seo_title_cn的受众是中国人，seo_title_en的受众是美国人，二者的含义不需要一一对应。'
+    // const prompt5 = '生成seo_title_en之后，请再次检查seo_title_en的长度，若seo_title_en(包含空格在内)的长度超过了70个字符，就适量删减seo_title_en。'
+    const prompt = prompt1 + prompt2 + prompt3 + prompt4 // + prompt5
 
     const msg_content = [
       {
@@ -624,11 +627,11 @@ const updateProductHtml = async () => {
 
 async function handleSyncImagesToCloudflare() {
   try {
-    const data = await fetchProductDetailComposable(productId)
+    const data = await fetchProductDetailComposable(route.params.id)
     productData.value = data
     syncImagesToCloudflare(productData.value, updateProductHtml)
   } catch (err) {
-    error.value = err.message
+    console.log('err :', err);
   }
 }
 
@@ -687,6 +690,19 @@ const deleteSuffixImages = async (count) => {
   } catch (error) {
     console.error('删除图片失败:', error)
     ElMessage.error('删除图片失败：' + (error.response?.data?.message || error.message))
+  }
+}
+
+const setSeoData = async () => {
+  try {
+    const updateData = {
+      "meta_title": productData.value.seo_title_en
+    }
+    await axios.put(`http://192.168.1.12:3000/api/products/${productData.value.shopify_id}/seo`, updateData)
+    ElMessage.success('SEO数据更新成功')
+  } catch (error) {
+    console.error('更新SEO数据失败:', error)
+    ElMessage.error('更新SEO数据失败：' + (error.response?.data?.message || error.message))
   }
 }
 

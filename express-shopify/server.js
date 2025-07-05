@@ -450,21 +450,21 @@ app.put('/api/products/:id',
 app.put('/api/products/:id/seo',
   validateProductId,
   validateRequestBody({
-    meta_description: { type: 'string', maxLength: 320 },
-    meta_title: { type: 'string', maxLength: 70 },
+    seo_description: { type: 'string', maxLength: 320 },
+    seo_title: { type: 'string', maxLength: 100 },
     handle: { type: 'string', maxLength: 255 }
   }),
   async (req, res) => {
     try {
       const { id: productId } = req.validatedParams;
-      const { meta_description, meta_title, handle } = req.body;
+      const { seo_description, seo_title, handle } = req.body;
       
       // 检查是否至少提供了一个要更新的SEO字段
-      if (!meta_description && !meta_title && !handle) {
+      if (!seo_description && !seo_title && !handle) {
         return res.status(400).json({
           success: false,
           error: '请求参数错误',
-          message: '至少需要提供一个要更新的SEO字段（meta_description, meta_title, handle）'
+          message: '至少需要提供一个要更新的SEO字段（seo_description, seo_title, handle）'
         });
       }
       
@@ -475,8 +475,14 @@ app.put('/api/products/:id/seo',
 
       // 构建更新数据
       const updateData = { product: {} };
-      if (meta_description !== undefined) updateData.product.meta_description = meta_description;
-      if (meta_title !== undefined) updateData.product.meta_title = meta_title;
+      
+      // 构建SEO对象
+      if (seo_description !== undefined || seo_title !== undefined) {
+        updateData.product.seo = {};
+        if (seo_description !== undefined) updateData.product.seo.description = seo_description;
+        if (seo_title !== undefined) updateData.product.seo.title = seo_title;
+      }
+      
       if (handle !== undefined) updateData.product.handle = handle;
 
       const client = new shopify.clients.Rest({ 
@@ -496,8 +502,7 @@ app.put('/api/products/:id/seo',
         data: {
           id: productData.id,
           title: productData.title,
-          meta_description: productData.meta_description,
-          meta_title: productData.meta_title,
+          seo: productData.seo,
           handle: productData.handle
         },
         message: '产品SEO信息更新成功'
@@ -544,7 +549,7 @@ app.put('/api/products/:id/seo',
           success: false,
           error: 'SEO数据验证失败',
           details: error.message,
-          hint: '请检查SEO数据格式：meta_description不超过320字符，meta_title不超过70字符'
+          hint: '请检查SEO数据格式：seo_description不超过320字符，seo_title不超过70字符'
         });
       }
 
@@ -847,7 +852,7 @@ app.listen(PORT, () => {
   Logger.info(`   GET /api/products - 获取产品列表（支持分页）`);
   Logger.info(`   GET /api/products/:id - 获取产品详情`);
   Logger.info(`   PUT /api/products/:id - 修改产品信息`);
-  Logger.info(`   PUT /api/products/:id/seo - 更新产品SEO信息`);
+  Logger.info(`   PUT /api/products/:id/seo - 更新产品SEO信息（需要body: {seo_description?, seo_title?, handle?}）`);
   Logger.info(`   GET /api/products/:id/metafields - 获取产品metafields`);
   Logger.info(`   POST /api/products/:id/metafields - 创建产品metafield`);
   Logger.info(`   PUT /api/products/:id/metafields/:metafield_id - 更新产品metafield`);
