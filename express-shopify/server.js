@@ -70,6 +70,9 @@ app.get('/', (req, res) => {
       products: '/api/products - 获取产品列表（支持分页）',
       productDetail: '/api/products/:id - 获取产品详情',
       updateProduct: '/api/products/:id - 修改产品信息（PUT）',
+      productMetafields: '/api/products/:id/metafields - 获取产品metafields',
+      createMetafield: '/api/products/:id/metafields - 创建产品metafield（POST）',
+      updateMetafield: '/api/products/:id/metafields/:metafield_id - 更新产品metafield（PUT）',
       testProxy: '/api/test-proxy - 测试代理连接'
     },
     features: [
@@ -442,6 +445,267 @@ app.put('/api/products/:id',
   }
 );
 
+// 获取产品metafields
+app.get('/api/products/:id/metafields', validateProductId, async (req, res) => {
+  try {
+    const { id: productId } = req.validatedParams;
+    
+    Logger.info('获取产品metafields请求', { productId });
+    
+    const session = createShopifySession();
+    validateSession(session);
+
+    const client = new shopify.clients.Rest({ 
+      session,
+      ...(agent && { httpAgent: agent, httpsAgent: agent })
+    });
+    const metafields = await client.get({
+      path: `products/${productId}/metafields`
+    });
+
+    const metafieldsData = metafields.body?.metafields || metafields.body || [];
+    
+    res.json({
+      success: true,
+      data: metafieldsData,
+      message: `成功获取产品 ${productId} 的 ${metafieldsData.length} 个metafields`
+    });
+    
+    Logger.info('成功获取产品metafields', { productId, count: metafieldsData.length });
+
+  } catch (error) {
+    Logger.error('获取产品metafields失败', error);
+    
+    if (error.message.includes('Not Found') || error.message.includes('404')) {
+      return res.status(404).json({
+        success: false,
+        error: '产品未找到',
+        details: error.message,
+        hint: `产品ID ${req.validatedParams.id} 不存在或已被删除`
+      });
+    }
+    
+    if (error.message.includes('Unauthorized') || error.message.includes('401')) {
+      return res.status(401).json({
+        success: false,
+        error: '未授权访问，请检查API密钥和访问令牌',
+        details: error.message,
+        hint: '获取metafields需要read_product_metafields权限'
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      error: '服务器内部错误',
+      details: process.env.NODE_ENV === 'development' ? error.message : '请联系管理员'
+    });
+  }
+});
+
+// 创建产品metafield
+app.post('/api/products/:id/metafields',
+  validateProductId,
+  validateRequestBody({
+    namespace: { type: 'string', required: true, maxLength: 20 },
+    key: { type: 'string', required: true, maxLength: 30 },
+    value: { required: true },
+    type: { type: 'string', required: true }
+  }),
+  async (req, res) => {
+    try {
+      const { id: productId } = req.validatedParams;
+      const { namespace, key, value, type, description } = req.body;
+      
+      Logger.info('创建产品metafield请求', { productId, namespace, key, type });
+      
+      const session = createShopifySession();
+      validateSession(session);
+
+      // 构建metafield数据
+      const metafieldData = {
+        metafield: {
+          namespace,
+          key,
+          value,
+          type
+        }
+      };
+      
+      if (description) {
+        metafieldData.metafield.description = description;
+      }
+
+      const client = new shopify.clients.Rest({ 
+        session,
+        ...(agent && { httpAgent: agent, httpsAgent: agent })
+      });
+      
+      const createdMetafield = await client.post({
+        path: `products/${productId}/metafields`,
+        data: metafieldData
+      });
+
+      const metafieldResult = createdMetafield.body?.metafield || createdMetafield.body;
+      
+      res.json({
+        success: true,
+        data: metafieldResult,
+        message: 'Metafield创建成功'
+      });
+      
+      Logger.info('Metafield创建成功', { 
+        productId, 
+        metafieldId: metafieldResult?.id,
+        namespace,
+        key
+      });
+
+    } catch (error) {
+      Logger.error('创建产品metafield失败', error);
+      
+      if (error.message.includes('Not Found') || error.message.includes('404')) {
+        return res.status(404).json({
+          success: false,
+          error: '产品未找到',
+          details: error.message,
+          hint: `产品ID ${req.validatedParams.id} 不存在或已被删除`
+        });
+      }
+      
+      if (error.message.includes('Unauthorized') || error.message.includes('401')) {
+        return res.status(401).json({
+          success: false,
+          error: '未授权访问，请检查API密钥和访问令牌',
+          details: error.message,
+          hint: '创建metafields需要write_product_metafields权限'
+        });
+      }
+      
+      if (error.message.includes('Unprocessable Entity') || error.message.includes('422')) {
+        return res.status(422).json({
+          success: false,
+          error: '数据验证失败',
+          details: error.message,
+          hint: '请检查metafield数据格式，确保namespace、key、value和type字段正确'
+        });
+      }
+
+      res.status(500).json({
+        success: false,
+        error: '服务器内部错误',
+        details: process.env.NODE_ENV === 'development' ? error.message : '请联系管理员'
+      });
+    }
+  }
+);
+
+// 更新产品metafield
+app.put('/api/products/:id/metafields/:metafield_id',
+  validateProductId,
+  validateRequestBody({
+    value: { required: true },
+    type: { type: 'string' }
+  }),
+  async (req, res) => {
+    try {
+      const { id: productId } = req.validatedParams;
+      const { metafield_id: metafieldId } = req.params;
+      const { value, type, description } = req.body;
+      
+      // 验证metafield_id
+      if (!metafieldId || !/^\d+$/.test(metafieldId)) {
+        return res.status(400).json({
+          success: false,
+          error: '请求参数错误',
+          message: 'metafield_id必须是有效的数字ID'
+        });
+      }
+      
+      Logger.info('更新产品metafield请求', { productId, metafieldId });
+      
+      const session = createShopifySession();
+      validateSession(session);
+
+      // 构建更新数据
+      const updateData = {
+        metafield: {
+          id: parseInt(metafieldId),
+          value
+        }
+      };
+      
+      if (type) {
+        updateData.metafield.type = type;
+      }
+      
+      if (description !== undefined) {
+        updateData.metafield.description = description;
+      }
+
+      const client = new shopify.clients.Rest({ 
+        session,
+        ...(agent && { httpAgent: agent, httpsAgent: agent })
+      });
+      
+      const updatedMetafield = await client.put({
+        path: `products/${productId}/metafields/${metafieldId}`,
+        data: updateData
+      });
+
+      const metafieldResult = updatedMetafield.body?.metafield || updatedMetafield.body;
+      
+      res.json({
+        success: true,
+        data: metafieldResult,
+        message: 'Metafield更新成功'
+      });
+      
+      Logger.info('Metafield更新成功', { 
+        productId, 
+        metafieldId,
+        namespace: metafieldResult?.namespace,
+        key: metafieldResult?.key
+      });
+
+    } catch (error) {
+      Logger.error('更新产品metafield失败', error);
+      
+      if (error.message.includes('Not Found') || error.message.includes('404')) {
+        return res.status(404).json({
+          success: false,
+          error: 'Metafield未找到',
+          details: error.message,
+          hint: `产品ID ${req.validatedParams.id} 或 Metafield ID ${req.params.metafield_id} 不存在`
+        });
+      }
+      
+      if (error.message.includes('Unauthorized') || error.message.includes('401')) {
+        return res.status(401).json({
+          success: false,
+          error: '未授权访问，请检查API密钥和访问令牌',
+          details: error.message,
+          hint: '更新metafields需要write_product_metafields权限'
+        });
+      }
+      
+      if (error.message.includes('Unprocessable Entity') || error.message.includes('422')) {
+        return res.status(422).json({
+          success: false,
+          error: '数据验证失败',
+          details: error.message,
+          hint: '请检查metafield数据格式，确保value和type字段正确'
+        });
+      }
+
+      res.status(500).json({
+        success: false,
+        error: '服务器内部错误',
+        details: process.env.NODE_ENV === 'development' ? error.message : '请联系管理员'
+      });
+    }
+  }
+);
+
 // 错误处理中间件
 app.use(errorLogger);
 app.use((err, req, res, next) => {
@@ -471,5 +735,8 @@ app.listen(PORT, () => {
   Logger.info(`   GET /api/products - 获取产品列表（支持分页）`);
   Logger.info(`   GET /api/products/:id - 获取产品详情`);
   Logger.info(`   PUT /api/products/:id - 修改产品信息`);
+  Logger.info(`   GET /api/products/:id/metafields - 获取产品metafields`);
+  Logger.info(`   POST /api/products/:id/metafields - 创建产品metafield`);
+  Logger.info(`   PUT /api/products/:id/metafields/:metafield_id - 更新产品metafield`);
   Logger.info(`   GET /api/test-proxy - 测试代理连接`);
 });
