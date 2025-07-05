@@ -696,7 +696,7 @@ const deleteSuffixImages = async (count) => {
 const setSeoData = async () => {
   try {
     const updateData = {
-      "meta_title": productData.value.seo_title_en
+      "seo_title": productData.value.seo_title_en
     }
     await axios.put(`http://192.168.1.12:3000/api/products/${productData.value.shopify_id}/seo`, updateData)
     ElMessage.success('SEO数据更新成功')
