@@ -70,8 +70,7 @@ app.get('/', (req, res) => {
       products: '/api/products - 获取产品列表（支持分页）',
       productDetail: '/api/products/:id - 获取产品详情',
       updateProduct: '/api/products/:id - 修改产品信息（PUT）',
-      testProxy: '/api/test-proxy - 测试代理连接',
-      health: '/health - 健康检查'
+      testProxy: '/api/test-proxy - 测试代理连接'
     },
     features: [
       '输入参数验证',
@@ -174,29 +173,6 @@ app.get('/api/test-proxy', async (req, res) => {
       proxyUrl: agent ? proxyUrl : null
     });
   }
-});
-
-// 健康检查端点
-app.get('/health', (req, res) => {
-  const healthCheck = {
-    status: 'OK',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    environment: process.env.NODE_ENV || 'development',
-    version: '1.0.0',
-    memory: {
-      used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024 * 100) / 100,
-      total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024 * 100) / 100
-    },
-    shopifyConfig: {
-      hasApiKey: !!process.env.SHOPIFY_API_KEY,
-      hasApiSecret: !!process.env.SHOPIFY_API_SECRET,
-      hasShopDomain: !!process.env.SHOPIFY_SHOP_DOMAIN,
-      hasAccessToken: !!process.env.SHOPIFY_ACCESS_TOKEN
-    }
-  };
-  
-  res.json(healthCheck);
 });
 
 // 获取产品列表API（支持分页）
