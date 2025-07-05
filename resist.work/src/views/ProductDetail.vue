@@ -332,7 +332,7 @@ const editingProductHtmlContent = ref('')
 const showTitleEditModal = ref(false)
 
 function editAtShopify() {
-  const url = `https://admin.shopify.com/store/a1jefv-w4/products/${row.shopify_id}`
+  const url = `https://admin.shopify.com/store/a1jefv-w4/products/${productData.value.shopify_id}`
   window.open(url, '_blank')
 }
 
@@ -343,7 +343,7 @@ function viewShopifyDetail() {
 }
 
 function viewTmallDetail() {
-  const url = `https://detail.tmall.com/item.htm?id=${row.product_id}`
+  const url = `https://detail.tmall.com/item.htm?id=${productData.value.product_id}`
   window.open(url, '_blank')
 }
 

@@ -96,7 +96,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 });
 
-// 主要数据采集函数
 async function collectAllData() {
   console.log('开始采集所有数据');
 
@@ -110,14 +109,36 @@ async function collectAllData() {
     skuData: []
   };
 
-  // 1. 采集商品视频（优先执行，其他任务等待完成）
-  data.video_url = await collectProductVideo();
-  console.log('采集到商品视频:', data.video_url);
-  console.log('视频采集任务已完成，开始执行其他采集任务...');
-
-  // 2. 采集商品ID
+  // 1. 采集商品ID
   data.productId = collectProductId();
   console.log('采集到商品ID:', data.productId);
+
+  // 检查数据库中是否已存在该商品
+  if (data.productId) {
+    try {
+      console.log('查询数据库中是否已存在商品:', data.productId);
+      const response = await fetch(`https://api.tiffanylamps.com.cn/products/${data.productId}`);
+      const result = await response.json();
+      
+      if (result.success && result.data) {
+        console.log('商品已存在于数据库中');
+        const shouldContinue = confirm(`商品 "${result.data.title_cn || data.productId}" 已存在于数据库中，是否继续采集？`);
+        if (!shouldContinue) {
+          console.log('用户取消采集');
+          return null;
+        }
+        console.log('用户确认继续采集');
+      } else {
+        console.log('商品不存在于数据库中，开始采集');
+      }
+    } catch (error) {
+      console.warn('查询数据库失败，继续采集:', error);
+    }
+  }
+
+  // 2. 采集商品视频
+  data.video_url = await collectProductVideo();
+  console.log('采集到商品视频:', data.video_url);
 
   // 3. 采集商品标题
   data.title = collectProductTitle();
