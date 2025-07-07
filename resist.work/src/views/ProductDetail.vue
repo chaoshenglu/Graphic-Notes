@@ -657,12 +657,18 @@ const synchronizeProductHtmlToShopify = async () => {
 }
 
 const synchronizeProductInfoToShopify = async () => {
-  await synchronizeProductInfoToShopifyComposable(productData.value)
-  const updateData = {
-    is_ok: 1
+  try {
+    await synchronizeProductInfoToShopifyComposable(productData.value)
+    const updateData = {
+      is_ok: 1
+    }
+    const productId = route.params.id
+    await axios.put(`${window.lx_host}/products/${productId}`, updateData)
+    productData.value.is_ok = 1
+  } catch (error) {
+    console.error('同步商品信息到Shopify失败:', error)
+    throw error
   }
-  const productId = route.params.id
-  await axios.put(`${window.lx_host}/products/${productId}`, updateData)
 }
 
 const deleteSuffixImages = async (count) => {

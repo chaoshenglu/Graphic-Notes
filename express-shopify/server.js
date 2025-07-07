@@ -451,7 +451,7 @@ app.put('/api/products/:id/seo',
   validateProductId,
   validateRequestBody({
     seo_description: { type: 'string', maxLength: 320 },
-    seo_title: { type: 'string', maxLength: 70 }
+    seo_title: { type: 'string', maxLength: 100 }
   }),
   async (req, res) => {
     try {
