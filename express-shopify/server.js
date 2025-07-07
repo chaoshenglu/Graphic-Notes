@@ -590,7 +590,7 @@ app.put('/api/products/:id/seo',
           success: false,
           error: 'SEO数据验证失败',
           details: error.message,
-          hint: '请检查SEO数据格式：seo_description不超过320字符，seo_title不超过70字符'
+          hint: '请检查SEO数据格式：seo_description不超过320字符，seo_title不超过100字符'
         });
       }
 
