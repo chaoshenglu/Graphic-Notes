@@ -152,10 +152,11 @@
       </div>
     </div>
     <div class="mb-10">
-      <div class="flex items-end justify-between mb-4">
+      <div class="flex items-end justify-between mb-4" v-if="productData">
         <h3 class="text-20px font-semibold text-gray-900 m-0 pb-2 inline-block"
-          style="border-bottom: 2px solid #007bff;">详情图片</h3>
+          style="border-bottom: 2px solid #007bff;">详情图片({{ productData.detail_images_cn.length }})</h3>
         <div class="flex">
+          <el-button type="primary" @click="previewDetails()">预览</el-button>
           <el-button type="primary" @click="deleteSuffixImages(17)"
             :loading="uploading">删除最后17张</el-button>
           <el-button type="primary" @click="deleteSuffixImages(7)"
@@ -266,13 +267,35 @@
         </span>
       </template>
     </el-dialog>
+
+    <!-- 详情图片预览弹窗 -->
+    <el-dialog v-model="showDetailPreview" title="详情图片预览" width="30%" :center="true"
+      class="mt-5vh mb-5vh max-h-90vh">
+      <div class="w-full max-h-70vh overflow-y-auto bg-gray-50 p-4">
+        <div class="flex flex-col items-center">
+          <img 
+            v-for="(image, index) in productData?.detail_images_cn || []" 
+            :key="index"
+            :src="image" 
+            :alt="`详情图 ${index + 1}`" 
+            class="w-full max-w-full object-contain shadow-sm"
+            style="display: block;"
+          />
+        </div>
+      </div>
+      <template #footer>
+        <span class="flex justify-end">
+          <el-button @click="showDetailPreview = false">关闭</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Edit, CopyDocument, ZoomIn, Delete, Download, HelpFilled, Loading, SuccessFilled, CircleCloseFilled } from '@element-plus/icons-vue'
+import { Edit, ZoomIn, Delete, Download, HelpFilled, Loading, SuccessFilled, CircleCloseFilled } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import axios from 'axios'
 import SkuEditModal from '../components/SkuEditModal.vue'
@@ -331,6 +354,15 @@ const editingLanguage = ref('cn') // 'cn' 表示编辑中文，'en' 表示编辑
 const showProductHtmlEditModal = ref(false)
 const editingProductHtmlContent = ref('')
 const showTitleEditModal = ref(false)
+const showDetailPreview = ref(false)
+
+function previewDetails() {
+  if (!productData.value?.detail_images_cn?.length) {
+    ElMessage.warning('暂无详情图片可预览')
+    return
+  }
+  showDetailPreview.value = true
+}
 
 function editAtShopify() {
   const url = `https://admin.shopify.com/store/a1jefv-w4/products/${productData.value.shopify_id}`

@@ -15,10 +15,10 @@
       <div v-if="productData" class="data-display">
         <textarea class="data-textarea" :value="formatProductData" readonly rows="30"></textarea>
         <div style="display: flex;flex-direction: row;align-items: center;">
-          <button class="copy-btn" @click="copyToClipboard">复制</button>
+          <button class="copy-btn" @click="updateDetailImages">detail_img</button>
           <button class="copy-btn" @click="updateSku">sku</button>
           <button class="copy-btn" @click="updateVideoUrl">video</button>
-          <button class="copy-btn" @click="uploadData">上传</button>
+          <button class="copy-btn" @click="uploadData">add</button>
         </div>
       </div>
     </div>
@@ -158,17 +158,49 @@ export default {
       return JSON.stringify(productData.value, null, 2)
     })
 
-    // 新增：复制数据到剪贴板
-    const copyToClipboard = async () => {
+    const updateDetailImages = async () => {
+      if (!productData.value || !productData.value.product_id) {
+        statusText.value = '没有可更新的商品数据'
+        statusClass.value = 'ready'
+        return
+      }
+
       try {
-        await navigator.clipboard.writeText(formatProductData.value)
-        statusText.value = '数据已复制到剪贴板！'
+        statusText.value = '正在更新细节图...'
+        statusClass.value = 'collecting'
+        const productId = productData.value.product_id
+        const update_data = {
+          detail_images_cn:productData.value.detail_images_cn
+        }
+        const response = await axios.put(`https://api.tiffanylamps.com.cn/products/${productId}`, update_data)
+        const { data } = response
+        if (data.success) {
+          statusText.value = '细节图更新成功'
+          statusClass.value = 'success'
+        } else {
+          statusText.value = `细节图失败：${data.message || '未知错误'}`
+          statusClass.value = 'ready'
+        }
+      } catch (error) {
+        console.error('细节图更新失败:', error)
+        let errorMessage = '网络错误'
+        
+        if (error.response && error.response.data && error.response.data.message) {
+          errorMessage = error.response.data.message
+        } else if (error.message) {
+          errorMessage = error.message
+        }
+        
+        statusText.value = `细节图更新失败：${errorMessage}`
+        statusClass.value = 'ready'
+      } finally {
+        // 3秒后重置状态文本
         setTimeout(() => {
-          statusText.value = '采集完成！'
-        }, 2000)
-      } catch (err) {
-        console.error('复制失败:', err)
-        statusText.value = '复制失败，请手动复制'
+          if (statusText.value.includes('细节图更新成功') || statusText.value.includes('细节图更新失败')) {
+            statusText.value = '准备就绪'
+            statusClass.value = 'ready'
+          }
+        }, 3000)
       }
     }
 
@@ -228,23 +260,28 @@ export default {
         })
 
         if (result && result.success) {
-          // 构建商品JSON
-          const collectedData = {
-            product_id: result.data.productId,
-            title_cn: result.data.title,
-            detail_images_cn: result.data.detailImages,
-            main_images_cn: result.data.mainImages,
-            param_info_cn: result.data.htmlContent,
-            video_url:result.data.video_url,
-            sku_data: result.data.skuData || []
+          if (result.data) {
+            // 构建商品JSON
+            const collectedData = {
+              product_id: result.data.productId,
+              title_cn: result.data.title,
+              detail_images_cn: result.data.detailImages,
+              main_images_cn: result.data.mainImages,
+              param_info_cn: result.data.htmlContent,
+              video_url: result.data.video_url,
+              sku_data: result.data.skuData || []
+            }
+
+            // 保存到localStorage
+            saveDataToLocalStorage(collectedData)
+
+            productData.value = collectedData
+            statusText.value = '采集完成！'
+            statusClass.value = 'success'
+          } else {
+            statusText.value = '用户取消采集'
+            statusClass.value = 'ready'
           }
-
-          // 保存到localStorage
-          saveDataToLocalStorage(collectedData)
-
-          productData.value = collectedData
-          statusText.value = '采集完成！'
-          statusClass.value = 'success'
         } else {
           throw new Error(result?.error || '采集失败')
         }
@@ -257,7 +294,7 @@ export default {
         isCollecting.value = false
         // 3秒后重置状态（但保留数据显示）
         setTimeout(() => {
-          if (statusText.value.includes('采集完成') || statusText.value.includes('复制')) {
+          if (statusText.value.includes('采集完成') || statusText.value.includes('复制') || statusText.value.includes('用户取消采集')) {
             statusText.value = '准备就绪'
             statusClass.value = 'ready'
           }
@@ -397,9 +434,9 @@ export default {
       productData,
       formatProductData,
       handleCollect,
-      copyToClipboard,
       uploadData,
       updateSku,
+      updateDetailImages,
       updateVideoUrl
     }
   }

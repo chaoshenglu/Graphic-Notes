@@ -113,6 +113,8 @@ async function collectAllData() {
   data.productId = collectProductId();
   console.log('采集到商品ID:', data.productId);
 
+
+
   // 检查数据库中是否已存在该商品
   if (data.productId) {
     try {
@@ -554,6 +556,28 @@ async function collectSkuData(mainImages) {
     console.log(`找到 ${valueItemDivs.length} 个valueItem元素`);
 
     const skuData = [];
+
+    // 新增：在采集前，先取消所有已选中的SKU，确保从一个干净的状态开始
+    const selectedItems = document.querySelectorAll('div[class*="valueItem"][class*="isSelected"]');
+    for (const item of selectedItems) {
+      // 检查是否存在一个未选中且未禁用的同类SKU来点击，以取消当前选中
+      const parent = item.closest('div[class*="skuItem"]');
+      if (parent) {
+        const otherOption = parent.querySelector('div[class*="valueItem"]:not([class*="isSelected"]):not([class*="isDisabled"])');
+        if (otherOption) {
+          otherOption.click();
+          await new Promise(resolve => setTimeout(resolve, 200)); // 等待UI更新
+        } else {
+          // 如果没有其他选项可以点击，可能无法取消，但这在大多数情况下应该有效
+          console.log('无法找到其他选项来取消当前选择:', item);
+        }
+      } else {
+        // 如果找不到父级，直接尝试点击自身，但这可能不会取消选择
+        item.click();
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+    }
+    console.log('已重置所有SKU选项');
 
     for (let index = 0; index < valueItemDivs.length; index++) {
       const div = valueItemDivs[index];
