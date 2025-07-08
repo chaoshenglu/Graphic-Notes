@@ -157,7 +157,7 @@
         <h3 class="text-20px font-semibold text-gray-900 m-0 pb-2 inline-block"
           style="border-bottom: 2px solid #007bff;">详情图片({{ productData.detail_images_cn.length }})</h3>
         <div class="flex">
-          <el-button type="primary" @click="editDetails()">预览</el-button>
+          <el-button type="primary" @click="editDetails()">编辑JSON</el-button>
           <el-button type="primary" @click="previewDetails()">预览</el-button>
           <el-button type="primary" @click="deleteSuffixImages(17)" :loading="uploading">删除最后17张</el-button>
           <el-button type="primary" @click="deleteSuffixImages(7)" :loading="uploading">删除最后7张</el-button>
@@ -281,6 +281,18 @@
         </span>
       </template>
     </el-dialog>
+
+    <!-- 详情图片JSON编辑弹窗 -->
+    <el-dialog v-model="showDetailImagesEditModal" title="编辑详情图片JSON数据" width="70%" :center="true" class="mt-5vh mb-5vh max-h-90vh flex flex-col">
+      <el-input v-model="editingDetailImagesContent" type="textarea" placeholder="请输入JSON格式的图片URL数组"
+        class="font-mono text-sm leading-relaxed" :autosize="{ minRows: 20, maxRows: 30 }" />
+      <template #footer>
+        <span class="flex justify-end gap-3">
+          <el-button @click="showDetailImagesEditModal = false">取消</el-button>
+          <el-button type="primary" @click="saveDetailImages">保存</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -347,6 +359,8 @@ const showProductHtmlEditModal = ref(false)
 const editingProductHtmlContent = ref('')
 const showTitleEditModal = ref(false)
 const showDetailPreview = ref(false)
+const showDetailImagesEditModal = ref(false)
+const editingDetailImagesContent = ref('')
 
 function previewDetails() {
   if (!productData.value?.detail_images_cn?.length) {
@@ -737,7 +751,36 @@ const setSeoData = async () => {
 }
 
 const editDetails = () => {
+  editingDetailImagesContent.value = JSON.stringify(productData.value.detail_images_cn, null, 2)
+  showDetailImagesEditModal.value = true
+}
 
+const saveDetailImages = async () => {
+  try {
+    const parsedData = JSON.parse(editingDetailImagesContent.value)
+    if (!Array.isArray(parsedData)) {
+      ElMessage.error('数据格式错误：必须是数组格式')
+      return
+    }
+    
+    const updateData = {
+      detail_images_cn: parsedData
+    }
+    
+    const productId = route.params.id
+    await axios.put(`${window.lx_host}/products/${productId}`, updateData)
+    
+    productData.value.detail_images_cn = parsedData
+    showDetailImagesEditModal.value = false
+    ElMessage.success('详情图片数据更新成功')
+  } catch (error) {
+    if (error instanceof SyntaxError) {
+      ElMessage.error('JSON格式错误，请检查语法')
+    } else {
+      console.error('保存详情图片失败:', error)
+      ElMessage.error('保存失败：' + (error.response?.data?.message || error.message))
+    }
+  }
 }
 
 </script>
