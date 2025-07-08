@@ -35,8 +35,9 @@
       </h1>
 
       <div class="flex items-center justify-center gap-4 flex-wrap" v-if="productData.seo_title_cn">
-        <h2 class="text-3xl font-normal text-gray-600 m-0 leading-relaxed" @click="copyText(productData.seo_title_cn)">{{
-          productData.seo_title_cn}}</h2>
+        <h2 class="text-3xl font-normal text-gray-600 m-0 leading-relaxed" @click="copyText(productData.seo_title_cn)">
+          {{
+            productData.seo_title_cn }}</h2>
       </div>
 
       <div class="flex items-center justify-center gap-4 flex-wrap">
@@ -156,13 +157,11 @@
         <h3 class="text-20px font-semibold text-gray-900 m-0 pb-2 inline-block"
           style="border-bottom: 2px solid #007bff;">详情图片({{ productData.detail_images_cn.length }})</h3>
         <div class="flex">
+          <el-button type="primary" @click="editDetails()">预览</el-button>
           <el-button type="primary" @click="previewDetails()">预览</el-button>
-          <el-button type="primary" @click="deleteSuffixImages(17)"
-            :loading="uploading">删除最后17张</el-button>
-          <el-button type="primary" @click="deleteSuffixImages(7)"
-            :loading="uploading">删除最后7张</el-button>
-          <el-button type="primary" @click="deleteSuffixImages(4)"
-            :loading="uploading">删除最后4张</el-button>
+          <el-button type="primary" @click="deleteSuffixImages(17)" :loading="uploading">删除最后17张</el-button>
+          <el-button type="primary" @click="deleteSuffixImages(7)" :loading="uploading">删除最后7张</el-button>
+          <el-button type="primary" @click="deleteSuffixImages(4)" :loading="uploading">删除最后4张</el-button>
           <el-button type="primary" @click="handleSyncImagesToCloudflare"
             :loading="uploading">同步图片到Cloudflare</el-button>
         </div>
@@ -269,18 +268,11 @@
     </el-dialog>
 
     <!-- 详情图片预览弹窗 -->
-    <el-dialog v-model="showDetailPreview" title="详情图片预览" width="30%" :center="true"
-      class="mt-5vh mb-5vh max-h-90vh">
+    <el-dialog v-model="showDetailPreview" title="详情图片预览" width="30%" :center="true" class="mt-5vh mb-5vh max-h-90vh">
       <div class="w-full max-h-70vh overflow-y-auto bg-gray-50 p-4">
         <div class="flex flex-col items-center">
-          <img 
-            v-for="(image, index) in productData?.detail_images_cn || []" 
-            :key="index"
-            :src="image" 
-            :alt="`详情图 ${index + 1}`" 
-            class="w-full max-w-full object-contain shadow-sm"
-            style="display: block;"
-          />
+          <img v-for="(image, index) in productData?.detail_images_cn || []" :key="index" :src="image"
+            :alt="`详情图 ${index + 1}`" class="w-full max-w-full object-contain shadow-sm" style="display: block;" />
         </div>
       </div>
       <template #footer>
@@ -708,13 +700,13 @@ const deleteSuffixImages = async (count) => {
     ElMessage.warning('暂无图片可删除')
     return
   }
-  
+
   const currentLength = productData.value.detail_images_cn.length
   if (currentLength <= count) {
     ElMessage.warning(`图片数量不足${count}张`)
     return
   }
-  
+
   try {
     // 删除最后count个元素
     const newDetailImages = [...productData.value.detail_images_cn]
@@ -742,6 +734,10 @@ const setSeoData = async () => {
     console.error('更新SEO数据失败:', error)
     ElMessage.error('更新SEO数据失败：' + (error.response?.data?.message || error.message))
   }
+}
+
+const editDetails = () => {
+
 }
 
 </script>
