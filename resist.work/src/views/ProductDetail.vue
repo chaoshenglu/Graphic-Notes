@@ -417,8 +417,8 @@ async function generateTwoSeoTitle() {
     const prompt2 = `请使用JSON格式返回两个新生成的标题，并将这两个字段分别命名为'seo_title_cn'和'seo_title_en'，参考下面的格式：`
     const prompt3 = `{"seo_title_cn": "台灯","seo_title_en":"table lamp"}，不要使用Markdown格式，不要添加注释，seo_title_en的长度不要超过70个字符。`
     const prompt4 = 'seo_title_cn的长度不受限制，seo_title_cn的受众是中国人，seo_title_en的受众是美国人，二者的含义不需要一一对应。'
-    // const prompt5 = '生成seo_title_en之后，请再次检查seo_title_en的长度，若seo_title_en(包含空格在内)的长度超过了70个字符，就适量删减seo_title_en。'
-    const prompt = prompt1 + prompt2 + prompt3 + prompt4 // + prompt5
+    const prompt5 = '当生成seo_title_en的时候，要考虑到美国人的用词习惯，并基于你对图片的理解生成标题，不要直接翻译中文标题。'
+    const prompt = prompt1 + prompt2 + prompt3 + prompt4 + prompt5
 
     const msg_content = [
       {
