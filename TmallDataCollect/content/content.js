@@ -587,6 +587,8 @@ async function processLazyLoadImages(images) {
       if (!imageUrls.includes(imageUrl)) {
         if (imageUrl == 'https://g.alicdn.com/s.gif') {
           console.log('这张图是分隔线，不要采集');
+        } else if (!imageUrl.startsWith('https')) {
+          console.log('图片URL不是以https开头，不采集');
         } else {
           imageUrls.push(imageUrl);
           console.log(`成功获取第 ${imageUrls.length} 个图片URL: ${imageUrl} (高度: ${imgHeight}px)`);
