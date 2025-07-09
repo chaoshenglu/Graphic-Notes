@@ -119,8 +119,139 @@ export default {
       loadSavedData()
     })
 
-    function lightCollect() {
+    const lightCollect = async () => {
+      try {
+        isCollecting.value = true
+        statusText.value = '正在简单采集...'
+        statusClass.value = 'collecting'
+        productData.value = null // 清空之前的数据
 
+        // 检查当前标签页是否为天猫页面
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
+        if (!tab.url.includes('tmall.com')) {
+          throw new Error('请在天猫商品详情页使用此扩展')
+        }
+
+        // 发送消息给content script进行简单数据采集
+        const result = await new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            reject(new Error('采集超时，请确保页面已完全加载'))
+          }, 30000)
+
+          chrome.tabs.sendMessage(tab.id, { action: 'lightCollectData' }, (response) => {
+            clearTimeout(timeout)
+            if (chrome.runtime.lastError) {
+              reject(new Error(chrome.runtime.lastError.message))
+            } else if (response) {
+              resolve(response)
+            } else {
+              reject(new Error('未收到响应，请刷新页面后重试'))
+            }
+          })
+        })
+
+        if (result && result.success) {
+          if (result.data) {
+            const { productId, title, mainImages } = result.data
+            
+            // 查询数据库中是否已存在此商品
+            statusText.value = '正在查询数据库...'
+            try {
+              const checkResponse = await axios.get(`https://api.tiffanylamps.com.cn/products/${productId}`)
+              
+              if (checkResponse.data.success && checkResponse.data.data) {
+                // 商品已存在，更新标题和主图
+                statusText.value = '商品已存在，正在更新...'
+                const updateData = {
+                  title_cn: title,
+                  main_images_cn: mainImages
+                }
+                const updateResponse = await axios.put(`https://api.tiffanylamps.com.cn/products/${productId}`, updateData)
+                
+                if (updateResponse.data.success) {
+                  statusText.value = '商品更新成功！'
+                  statusClass.value = 'success'
+                } else {
+                  throw new Error(updateResponse.data.message || '更新失败')
+                }
+              } else {
+                // 商品不存在，创建新商品
+                statusText.value = '商品不存在，正在创建...'
+                const createData = {
+                  product_id: productId,
+                  title_cn: title,
+                  main_images_cn: mainImages
+                }
+                const createResponse = await axios.post('https://api.tiffanylamps.com.cn/products', createData)
+                
+                if (createResponse.data.success) {
+                  statusText.value = '商品创建成功！'
+                  statusClass.value = 'success'
+                } else {
+                  throw new Error(createResponse.data.message || '创建失败')
+                }
+              }
+            } catch (apiError) {
+              if (apiError.response && apiError.response.status === 404) {
+                // 商品不存在，创建新商品
+                statusText.value = '商品不存在，正在创建...'
+                const createData = {
+                  product_id: productId,
+                  title_cn: title,
+                  main_images_cn: mainImages
+                }
+                const createResponse = await axios.post('https://api.tiffanylamps.com.cn/products', createData)
+                
+                if (createResponse.data.success) {
+                  statusText.value = '商品创建成功！'
+                  statusClass.value = 'success'
+                } else {
+                  throw new Error(createResponse.data.message || '创建失败')
+                }
+              } else {
+                throw apiError
+              }
+            }
+            
+            // 构建简单的商品数据用于显示
+            const collectedData = {
+              product_id: productId,
+              title_cn: title,
+              main_images_cn: mainImages,
+              detail_images_cn: [],
+              param_info_cn: '',
+              video_url: '',
+              sku_data: []
+            }
+            
+            productData.value = collectedData
+            saveDataToLocalStorage(collectedData)
+          } else {
+            statusText.value = '用户取消采集'
+            statusClass.value = 'ready'
+          }
+        } else {
+          throw new Error(result?.error || '采集失败')
+        }
+      } catch (error) {
+        console.error('简单采集过程中出现错误:', error)
+        let errorMessage = error.message
+        if (error.response && error.response.data && error.response.data.message) {
+          errorMessage = error.response.data.message
+        }
+        statusText.value = `简单采集失败: ${errorMessage}`
+        statusClass.value = 'ready'
+        productData.value = null
+      } finally {
+        isCollecting.value = false
+        // 3秒后重置状态（但保留数据显示）
+        setTimeout(() => {
+          if (statusText.value.includes('成功') || statusText.value.includes('用户取消采集')) {
+            statusText.value = '准备就绪'
+            statusClass.value = 'ready'
+          }
+        }, 3000)
+      }
     }
 
     const uploadData = async () => {
@@ -443,6 +574,7 @@ export default {
       productData,
       formatProductData,
       handleCollect,
+      lightCollect,
       uploadData,
       updateSku,
       updateDetailImages,

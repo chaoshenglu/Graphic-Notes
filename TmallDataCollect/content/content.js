@@ -93,6 +93,30 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
 
     return true;
+  } else if (request.action === 'lightCollectData') {
+    console.log('收到简单采集请求');
+
+    // 立即返回true表示异步响应
+    (async () => {
+      try {
+        const lightData = await collectLightData();
+        sendResponse({
+          success: true,
+          message: '简单采集成功',
+          data: lightData
+        });
+      } catch (error) {
+        console.error('简单采集失败:', error);
+        sendResponse({
+          success: false,
+          error: error.message,
+          data: null
+        });
+      }
+    })();
+
+    // 返回true表示异步响应
+    return true;
   }
 });
 
@@ -161,6 +185,43 @@ async function collectAllData() {
   // 7. 采集SKU数据
   data.skuData = await collectSkuData(data.mainImages);
   console.log('采集到SKU数据:', data.skuData);
+
+  return data;
+}
+
+// 简单采集数据（只采集productId、标题、主图）
+async function collectLightData() {
+  console.log('开始简单采集数据');
+
+  const data = {
+    productId: null,
+    title: null,
+    mainImages: []
+  };
+
+  // 1. 采集商品ID
+  data.productId = collectProductId();
+  console.log('采集到商品ID:', data.productId);
+
+  if (!data.productId) {
+    throw new Error('无法获取商品ID，请确保在天猫商品详情页');
+  }
+
+  // 2. 采集商品标题
+  data.title = collectProductTitle();
+  console.log('采集到商品标题:', data.title);
+
+  if (!data.title) {
+    throw new Error('无法获取商品标题');
+  }
+
+  // 3. 采集商品主图
+  data.mainImages = await collectMainImages();
+  console.log('采集到主图:', data.mainImages);
+
+  if (data.mainImages.length === 0) {
+    throw new Error('无法获取商品主图');
+  }
 
   return data;
 }
