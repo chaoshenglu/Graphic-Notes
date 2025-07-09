@@ -47,7 +47,7 @@
       
       <el-table-column prop="product_id" label="产品ID" width="150" />
       
-      <el-table-column prop="is_ugly" label="是否推荐" width="190">
+      <el-table-column prop="is_ugly" label="是否推荐" width="100">
         <template #default="{ row }">
           <div class="cursor-pointer" @click="switchIsUgly(row)">{{ row.is_ugly ? '❌' : '👍' }}</div>
         </template>
