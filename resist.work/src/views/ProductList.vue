@@ -146,7 +146,6 @@ async function switchIsUgly(row) {
     console.log('row :', row);
     console.log('productId :', productId);
     const updateData = {
-      ...row,
       is_ugly: !current_is_ugly
     }
     await axios.put(`${window.lx_host}/products/${productId}`, updateData)
@@ -172,7 +171,6 @@ const switchIsOk = async (row) => {
     const productId = row.product_id
     const target_is_ok = current_is_ok == 0 ? 1 : 0
     const updateData = {
-      ...row,
       is_ok: target_is_ok
     }
     await axios.put(`${window.lx_host}/products/${productId}`, updateData)
