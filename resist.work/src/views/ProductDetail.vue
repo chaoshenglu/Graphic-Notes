@@ -22,8 +22,10 @@
       <span class="mt-10px ml-12px">4.参数：彩色玻璃，质保年限等</span>
       <span class="mt-10px ml-12px">5.not-floor-lamp-switch.webp</span>
     </div>
-    <div class="flex" style="position: fixed;top:100px;left:320px;cursor: pointer;">
-      <img src="/src/assets/back.svg" @click="backToList">
+    <div class="flex flex-col" style="position: fixed;top:100px;left:320px;cursor: pointer;">
+      <el-button class="mt-30px" @click="backToList">返回列表</el-button>
+      <el-button class="mt-10px" @click="previousOne">上一个</el-button>
+      <el-button class="mt-10px" @click="nextOne">下一个</el-button>
     </div>
     <div class="mb-8 text-center" v-if="productData">
       <h1 v-if="productData.seo_title_cn" class="text-3xl font-bold text-gray-800 mb-3 leading-tight line-through"
@@ -304,7 +306,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Edit, ZoomIn, Delete, Download, HelpFilled, Loading, SuccessFilled, CircleCloseFilled } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -319,6 +321,19 @@ const productData = ref(null)
 const error = ref(null)
 const router = useRouter()
 
+watch(
+  () => route.params.id,
+  (newId, oldId) => {
+    if (newId && newId !== oldId) {
+      // 当路由参数变化时，重新获取产品数据
+      fetchProductDetail(newId)
+      // 更新页面标题
+      document.title = `Hauty商品详情 - ${newId}`
+    }
+  },
+  { immediate: false } // 不立即执行，因为onMounted已经处理了初始加载
+)
+
 const {
   uploading,
   downloadAllMainImages: downloadAllMainImagesComposable,
@@ -326,6 +341,84 @@ const {
   syncImagesToCloudflare,
   previewImage: previewImageComposable,
 } = useImageOperations()
+
+function previousOne() {
+  try {
+    // 从localStorage获取商品ID数组
+    const productIds = JSON.parse(window.localStorage.getItem('product_ids') || '[]')
+    
+    if (productIds.length === 0) {
+      ElMessage.warning('暂无商品列表数据，请先刷新页面加载商品')
+      return
+    }
+    
+    // 获取当前商品ID
+    const currentId = route.params.id
+    
+    // 找到当前商品在数组中的位置
+    const currentIndex = productIds.findIndex(id => id.toString() === currentId.toString())
+    
+    if (currentIndex === -1) {
+      ElMessage.warning('当前商品不在商品列表中')
+      return
+    }
+    
+    // 如果已经是第一个商品
+    if (currentIndex === 0) {
+      ElMessage.info('已经是第一个商品了')
+      return
+    }
+    
+    // 获取上一个商品ID
+    const previousId = productIds[currentIndex - 1]
+    
+    // 导航到上一个商品详情页
+    router.push(`/product-detail/${previousId}`)
+    
+  } catch (error) {
+    console.error('切换到上一个商品失败:', error)
+    ElMessage.error('切换失败，请重试')
+  }
+}
+
+function nextOne() {
+  try {
+    // 从localStorage获取商品ID数组
+    const productIds = JSON.parse(window.localStorage.getItem('product_ids') || '[]')
+    
+    if (productIds.length === 0) {
+      ElMessage.warning('暂无商品列表数据，请先刷新页面加载商品')
+      return
+    }
+    
+    // 获取当前商品ID
+    const currentId = route.params.id
+    
+    // 找到当前商品在数组中的位置
+    const currentIndex = productIds.findIndex(id => id.toString() === currentId.toString())
+    
+    if (currentIndex === -1) {
+      ElMessage.warning('当前商品不在商品列表中')
+      return
+    }
+    
+    // 如果已经是最后一个商品
+    if (currentIndex === productIds.length - 1) {
+      ElMessage.info('已经是最后一个商品了')
+      return
+    }
+    
+    // 获取下一个商品ID
+    const nextId = productIds[currentIndex + 1]
+    
+    // 导航到下一个商品详情页
+    router.push(`/product-detail/${nextId}`)
+    
+  } catch (error) {
+    console.error('切换到下一个商品失败:', error)
+    ElMessage.error('切换失败，请重试')
+  }
+}
 
 const downloadAllMainImages = async () => {
   await downloadAllMainImagesComposable(productData.value)
