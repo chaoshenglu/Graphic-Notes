@@ -7,12 +7,12 @@
       <div class="status" :class="statusClass">
         {{ statusText }}
       </div>
-      <div class="flex">
-        <button class="collect-btn" @click="lightCollect">
+      <div class="flex flex-row">
+        <button class="collect-btn" style="margin-right: 10px;" @click="lightCollect">
         简单采集
         </button>
-        <button class="collect-btn" @click="handleCollect" :disabled="isCollecting">
-        {{ isCollecting ? '采集中...' : '开始采集数据' }}
+        <button class="collect-btn" style="margin-left: 10px;" @click="handleCollect" :disabled="isCollecting">
+        {{ isCollecting ? '采集中...' : '完整采集' }}
       </button>
       </div>
 
@@ -120,7 +120,7 @@ export default {
     })
 
     function lightCollect() {
-      
+
     }
 
     const uploadData = async () => {
@@ -510,7 +510,7 @@ export default {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  min-width: 140px;
+  width: 100px;
 }
 
 .collect-btn:hover:not(:disabled) {
