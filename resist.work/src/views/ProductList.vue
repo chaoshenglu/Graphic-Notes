@@ -49,7 +49,7 @@
       
       <el-table-column prop="is_ugly" label="是否推荐" width="190">
         <template #default="{ row }">
-          {{ row.is_ugly ? '❌' : '👍' }}
+          <div @click="switchIsUgly">{{ row.is_ugly ? '❌' : '👍' }}</div>
         </template>
       </el-table-column>
       
@@ -139,6 +139,23 @@ function refreshProducts() {
   fetchProductList()
 }
 
+async function switchIsUgly() {
+  let current_is_ugly = row.is_ugly || false
+  try {
+    const productId = row.product_id
+    console.log('row :', row);
+    console.log('productId :', productId);
+    const updateData = {
+      ...row,
+      is_ugly: !current_is_ugly
+    }
+    await axios.put(`${window.lx_host}/products/${productId}`, updateData)
+    row.is_ugly = !current_is_ugly
+  } catch (error) {
+    ElMessage.error('更新失败：' + (error.response?.data?.message || error.message))
+  }
+}
+
 function viewTmallDetail(row) {
   const url = `https://detail.tmall.com/item.htm?id=${row.product_id}`
   window.open(url, '_blank')
@@ -153,14 +170,13 @@ const switchIsOk = async (row) => {
   let current_is_ok = row.is_ok || 0
   try {
     const productId = row.product_id
-    console.log('row :', row);
-    console.log('productId :', productId);
+    const target_is_ok = current_is_ok == 0 ? 1 : 0
     const updateData = {
       ...row,
-      is_ok: current_is_ok == 0 ? 1 : 0
+      is_ok: target_is_ok
     }
     await axios.put(`${window.lx_host}/products/${productId}`, updateData)
-    row.is_ok = !row.is_ok
+    row.is_ok = target_is_ok
   } catch (error) {
     ElMessage.error('更新失败：' + (error.response?.data?.message || error.message))
   }
