@@ -7,9 +7,14 @@
       <div class="status" :class="statusClass">
         {{ statusText }}
       </div>
-      <button class="collect-btn" @click="handleCollect" :disabled="isCollecting">
+      <div class="flex">
+        <button class="collect-btn" @click="lightCollect">
+        简单采集
+        </button>
+        <button class="collect-btn" @click="handleCollect" :disabled="isCollecting">
         {{ isCollecting ? '采集中...' : '开始采集数据' }}
       </button>
+      </div>
 
       <!-- 数据显示区域 -->
       <div v-if="productData" class="data-display">
@@ -113,6 +118,10 @@ export default {
     onMounted(() => {
       loadSavedData()
     })
+
+    function lightCollect() {
+      
+    }
 
     const uploadData = async () => {
       try {
