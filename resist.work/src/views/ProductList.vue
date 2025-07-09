@@ -231,14 +231,13 @@ const viewDetail = (row) => {
     ElMessage.error('产品ID不存在，无法查看详情')
     return
   }
-  
-  // 跳转到产品详情页面
-  router.push({
+  const detailUrl = router.resolve({
     name: 'ProductDetail',
     params: {
       id: row.product_id
     }
   })
+  window.open(detailUrl.href, '_blank')
 }
 
 // 删除产品 (DELETE /products/:id)

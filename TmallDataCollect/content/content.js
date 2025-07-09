@@ -561,26 +561,7 @@ async function processLazyLoadImages(images) {
 
     console.log(`处理第 ${i + 1} 个图片元素`);
 
-    // 滚动到图片位置触发懒加载
-    img.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-    // 等待页面稳定
-    await new Promise(resolve => setTimeout(resolve, 200));
-
-    // 尝试触发懒加载的多种方式
-    triggerLazyLoad(img);
-
-    // 等待图片加载
-    await waitForImageLoad(img);
-
-    // 检查图片高度，过滤掉高度小于或等于2px的图片
-    const imgHeight = img.offsetHeight || img.clientHeight || img.getBoundingClientRect().height;
-    if (imgHeight <= 2) {
-      console.log(`第 ${i + 1} 个图片高度为 ${imgHeight}px，跳过采集`);
-      continue;
-    }
-
-    // 尝试多种方式获取图片URL
+    // 直接提取图片URL，不需要滚动和等待加载
     let imageUrl = extractImageUrl(img);
 
     if (imageUrl) {
@@ -591,15 +572,12 @@ async function processLazyLoadImages(images) {
           console.log('图片URL不是以https开头，不采集');
         } else {
           imageUrls.push(imageUrl);
-          console.log(`成功获取第 ${imageUrls.length} 个图片URL: ${imageUrl} (高度: ${imgHeight}px)`);
+          console.log(`成功获取第 ${imageUrls.length} 个图片URL: ${imageUrl}`);
         }
       }
     } else {
       console.warn(`第 ${i + 1} 个图片元素未能获取有效URL:`, img);
     }
-
-    // 添加延迟避免过快处理
-    await new Promise(resolve => setTimeout(resolve, 200));
   }
 
   return imageUrls;

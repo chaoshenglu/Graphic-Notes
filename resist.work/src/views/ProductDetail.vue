@@ -133,6 +133,11 @@
               <Edit />
             </el-icon>
           </div>
+          <div class="text-6 absolute top-4px right-18px cursor-pointer w-14px" @click="deleteSku(sku, index)">
+            <el-icon>
+              <Delete />
+            </el-icon>
+          </div>
           <div class="w-full h-48 overflow-hidden flex items-center justify-center">
             <img :src="sku.skuImageUrl" :alt="sku.skuNameCn"
               class="w-3/5 h-3/5 object-cover transition-transform duration-300 group-hover:scale-105" />
@@ -157,9 +162,8 @@
         <h3 class="text-20px font-semibold text-gray-900 m-0 pb-2 inline-block"
           style="border-bottom: 2px solid #007bff;">详情图片({{ productData.detail_images_cn.length }})</h3>
         <div class="flex">
-          <el-button type="primary" @click="editDetails()">编辑JSON</el-button>
           <el-button type="primary" @click="previewDetails()">预览</el-button>
-          <el-button type="primary" @click="deleteSuffixImages(17)" :loading="uploading">删除最后17张</el-button>
+          <el-button type="primary" @click="editDetails()">编辑JSON</el-button>
           <el-button type="primary" @click="deleteSuffixImages(7)" :loading="uploading">删除最后7张</el-button>
           <el-button type="primary" @click="deleteSuffixImages(4)" :loading="uploading">删除最后4张</el-button>
           <el-button type="primary" @click="handleSyncImagesToCloudflare"
@@ -174,6 +178,8 @@
             class="absolute inset-0 bg-black/50 flex items-center justify-center gap-3 opacity-0 transition-opacity duration-300 rounded-lg group-hover:opacity-100">
             <el-button type="primary" :icon="ZoomIn" circle size="small" @click.stop="previewImage(image)"
               title="放大预览" />
+            <el-button type="primary" :icon="CircleCloseFilled" circle size="small" @click.stop="checkLine(image)"
+              title="判断线条" />
             <el-button type="danger" :icon="Delete" circle size="small" @click.stop="deleteDetailImage(index)"
               title="删除图片" />
           </div>
@@ -283,7 +289,8 @@
     </el-dialog>
 
     <!-- 详情图片JSON编辑弹窗 -->
-    <el-dialog v-model="showDetailImagesEditModal" title="编辑详情图片JSON数据" width="70%" :center="true" class="mt-5vh mb-5vh max-h-90vh flex flex-col">
+    <el-dialog v-model="showDetailImagesEditModal" title="编辑详情图片JSON数据" width="70%" :center="true"
+      class="mt-5vh mb-5vh max-h-90vh flex flex-col">
       <el-input v-model="editingDetailImagesContent" type="textarea" placeholder="请输入JSON格式的图片URL数组"
         class="font-mono text-sm leading-relaxed" :autosize="{ minRows: 20, maxRows: 30 }" />
       <template #footer>
@@ -300,7 +307,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Edit, ZoomIn, Delete, Download, HelpFilled, Loading, SuccessFilled, CircleCloseFilled } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import axios from 'axios'
 import SkuEditModal from '../components/SkuEditModal.vue'
 import TitleEditModal from '../components/TitleEditModal.vue'
@@ -402,6 +409,31 @@ function copyText(e) {
 
 function previewVideo() {
   window.open(productData.value.video_url, '_blank')
+}
+
+function checkLine(imageUrl) {
+  const img = new Image()
+  img.onload = function () {
+    console.log(`图片尺寸: ${img.width}x${img.height}`)
+    if (img.height < 5) {
+      const imageIndex = productData.value?.detail_images_cn?.findIndex(url => url === imageUrl)
+      if (imageIndex !== -1) {
+        console.log(`图片高度${img.height}px小于5px，正在删除...`)
+        deleteDetailImage(imageIndex)
+        ElMessage.warning(`检测到异常图片(高度${img.height}px)，已自动删除`)
+      } else {
+        console.log('未找到图片在详情图列表中')
+        ElMessage.error('未找到图片在详情图列表中，无法删除')
+      }
+    } else {
+      ElMessage.success(`图片高度正常${img.height}`)
+    }
+  }
+  img.onerror = function () {
+    console.error('图片加载失败:', imageUrl)
+    ElMessage.error('图片加载失败，无法检查尺寸')
+  }
+  img.src = imageUrl
 }
 
 async function generateTwoSeoTitle() {
@@ -623,6 +655,46 @@ const openSkuEditModal = (sku, index) => {
   showSkuEditModal.value = true
 }
 
+const deleteSku = async (sku, index) => {
+  if (!productData.value?.sku_data || productData.value.sku_data.length === 0) {
+    ElMessage.warning('暂无SKU可删除')
+    return
+  }
+
+  try {
+    // 添加确认弹框
+    await ElMessageBox.confirm(
+      `确定要删除SKU "${sku.skuNameCn}" 吗？此操作不可撤销。`,
+      '删除确认',
+      {
+        confirmButtonText: '确定删除',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    )
+
+    const newSkuData = [...productData.value.sku_data]
+    newSkuData.splice(index, 1)
+
+    const updateData = {
+      sku_data: newSkuData
+    }
+
+    const productId = route.params.id
+    await axios.put(`${window.lx_host}/products/${productId}`, updateData)
+    productData.value.sku_data = newSkuData
+
+    ElMessage.success(`成功删除SKU "${sku.skuNameCn}"，剩余${newSkuData.length}个SKU`)
+  } catch (error) {
+    // 如果用户取消删除，不显示错误信息
+    if (error === 'cancel') {
+      return
+    }
+    console.error('删除SKU失败:', error)
+    ElMessage.error('删除SKU失败：' + (error.response?.data?.message || error.message))
+  }
+}
+
 const handleSkuSaveSuccess = (result) => {
   if (productData.value && productData.value.sku_data && productData.value.sku_data[result.index]) {
     Object.assign(productData.value.sku_data[result.index], result.data)
@@ -762,14 +834,14 @@ const saveDetailImages = async () => {
       ElMessage.error('数据格式错误：必须是数组格式')
       return
     }
-    
+
     const updateData = {
       detail_images_cn: parsedData
     }
-    
+
     const productId = route.params.id
     await axios.put(`${window.lx_host}/products/${productId}`, updateData)
-    
+
     productData.value.detail_images_cn = parsedData
     showDetailImagesEditModal.value = false
     ElMessage.success('详情图片数据更新成功')
