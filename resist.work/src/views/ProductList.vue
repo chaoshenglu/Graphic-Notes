@@ -49,7 +49,7 @@
       
       <el-table-column prop="is_ugly" label="是否推荐" width="190">
         <template #default="{ row }">
-          <div @click="switchIsUgly">{{ row.is_ugly ? '❌' : '👍' }}</div>
+          <div class="cursor-pointer" @click="switchIsUgly(row)">{{ row.is_ugly ? '❌' : '👍' }}</div>
         </template>
       </el-table-column>
       
@@ -139,7 +139,7 @@ function refreshProducts() {
   fetchProductList()
 }
 
-async function switchIsUgly() {
+async function switchIsUgly(row) {
   let current_is_ugly = row.is_ugly || false
   try {
     const productId = row.product_id
