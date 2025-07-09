@@ -3,7 +3,6 @@
     <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
         <div class="flex justify-between items-center">
           <div class="flex items-center space-x-4">
-            <!-- <span class="font-bold text-#ff0b31" style="flex-shrink:0;">天猫</span> -->
             <img src="/src/assets/tmall.webp" style="width: 100px;">
             <el-input
               v-model="searchQuery"
@@ -48,9 +47,9 @@
       
       <el-table-column prop="product_id" label="产品ID" width="150" />
       
-      <el-table-column prop="shopify_id" label="Shopify ID" width="150">
+      <el-table-column prop="is_ugly" label="是否推荐" width="190">
         <template #default="{ row }">
-          {{ row.shopify_id || '未设置' }}
+          {{ row.is_ugly ? '❌' : '👍' }}
         </template>
       </el-table-column>
       
