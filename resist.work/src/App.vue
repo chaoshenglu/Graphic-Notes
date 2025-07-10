@@ -17,6 +17,15 @@
     <main class="main-content">
       <router-view />
     </main>
+    
+    <!-- 网站底部 -->
+    <footer class="app-footer">
+      <div class="footer-content">
+        <a href="https://beian.miit.gov.cn" target="_blank" rel="noopener noreferrer" class="beian-link">
+          粤ICP备2025440962号-1
+        </a>
+      </div>
+    </footer>
   </div>
 </template>
 
@@ -47,6 +56,8 @@ function backToHome() {
 .app-container {
   min-height: 100vh;
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  display: flex;
+  flex-direction: column;
 }
 
 .app-header {
@@ -99,6 +110,34 @@ function backToHome() {
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
+  flex: 1; /* 自动扩展填充剩余空间 */
+  width: 100%;
+}
+
+.app-footer {
+  background: white;
+  border-top: 1px solid var(--border-color);
+  margin-top: auto;
+  padding: 1.5rem 0;
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  text-align: center;
+}
+
+.beian-link {
+  color: #6b7280;
+  text-decoration: none;
+  font-size: 0.875rem;
+  transition: color 0.2s ease;
+}
+
+.beian-link:hover {
+  color: var(--primary-color);
+  text-decoration: underline;
 }
 
 
@@ -146,6 +185,10 @@ function backToHome() {
   .main-content {
     padding: 1rem;
   }
+  
+  .footer-content {
+    padding: 0 1rem;
+  }
 }
 
 @media (max-width: 480px) {
@@ -161,5 +204,12 @@ function backToHome() {
     font-size: 1.25rem;
   }
   
+  .footer-content {
+    padding: 0 0.75rem;
+  }
+  
+  .beian-link {
+    font-size: 0.8rem;
+  }
 }
 </style>
