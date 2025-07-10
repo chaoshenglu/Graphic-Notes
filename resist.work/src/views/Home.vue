@@ -29,35 +29,35 @@ const tools = ref([
     icon: '🎨',
     description: '智能AI绘图工具'
   },
-  {
-    id: 'notes',
-    name: '图文笔记',
-    icon: '📝',
-    description: '富文本笔记编辑'
-  },
+  // {
+  //   id: 'notes',
+  //   name: '图文笔记',
+  //   icon: '📝',
+  //   description: '富文本笔记编辑'
+  // },
   {
     id: 'image-compress',
     name: '图片压缩',
     icon: '🗜️',
     description: '高效图片压缩'
   },
-  {
-    id: 'detail-generate',
-    name: '生成详情页',
-    icon: '📃',
-    description: '产品详情页生成'
-  },
-  {
-    id: 'image-convert',
-    name: '图片转格式',
-    icon: '🔄',
-    description: '图片格式转换'
-  },
+  // {
+  //   id: 'detail-generate',
+  //   name: '生成详情页',
+  //   icon: '📃',
+  //   description: '产品详情页生成'
+  // },
+  // {
+  //   id: 'image-convert',
+  //   name: '图片转格式',
+  //   icon: '🔄',
+  //   description: '图片格式转换'
+  // },
   {
     id: 'product-list',
     name: '产品列表',
     icon: '⚏',
-    description: '豪蒂灯饰产品列表'
+    description: '公司内部产品列表'
   },
   {
     id: 'watermark',
