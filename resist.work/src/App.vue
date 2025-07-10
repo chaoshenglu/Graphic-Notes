@@ -115,7 +115,6 @@ function backToHome() {
 }
 
 .app-footer {
-  background: white;
   border-top: 1px solid var(--border-color);
   margin-top: auto;
   padding: 1.5rem 0;
