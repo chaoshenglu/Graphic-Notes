@@ -160,9 +160,10 @@ function viewTmallDetail(row) {
   window.open(url, '_blank')
 }
 
-function viewShopifyDetail(row) {
+async function viewShopifyDetail(row) {
   // const url = `https://admin.shopify.com/store/a1jefv-w4/products/${row.shopify_id}`
   // window.open(url, '_blank')
+  const res = await axios.get(`http://192.168.1.12:3000/api/products/${product.id}`)
 }
 
 const switchIsOk = async (row) => {
