@@ -161,8 +161,8 @@ function viewTmallDetail(row) {
 }
 
 function viewShopifyDetail(row) {
-  const url = `https://admin.shopify.com/store/a1jefv-w4/products/${row.shopify_id}`
-  window.open(url, '_blank')
+  // const url = `https://admin.shopify.com/store/a1jefv-w4/products/${row.shopify_id}`
+  // window.open(url, '_blank')
 }
 
 const switchIsOk = async (row) => {
